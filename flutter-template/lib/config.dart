@@ -8,6 +8,7 @@ class AppConfig {
   static bool enablePullRefresh = true;
   static bool enableOfflinePage = true;
   static bool enablePushNotification = false;
+  static String onesignalAppId = "";
   static bool enableAdmob = false;
   static String admobAppId = "";
   static String admobBannerUnitId = "";
@@ -24,6 +25,7 @@ class AppConfig {
       enablePullRefresh = data['enable_pull_refresh'] ?? enablePullRefresh;
       enableOfflinePage = data['enable_offline_page'] ?? enableOfflinePage;
       enablePushNotification = data['enable_push_notification'] ?? enablePushNotification;
+      onesignalAppId = data['onesignal_app_id'] ?? onesignalAppId;
       enableAdmob = data['enable_admob'] ?? enableAdmob;
       admobAppId = data['admob_app_id'] ?? admobAppId;
       admobBannerUnitId = data['admob_banner_unit_id'] ?? admobBannerUnitId;

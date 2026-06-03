@@ -70,11 +70,21 @@ class AppForm
                                             ->label('Offline Page'),
 
                                         Toggle::make('enable_push_notification')
-                                            ->label('Push Notifications'),
+                                            ->label('Push Notifications')
+                                            ->helperText('Enable OneSignal Push Notifications')
+                                            ->live(),
 
                                         Toggle::make('enable_admob')
                                             ->label('Google AdMob'),
-                                    ])
+                                    ]),
+
+                                TextInput::make('onesignal_app_id')
+                                    ->label('OneSignal App ID')
+                                    ->placeholder('e.g. XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX')
+                                    ->visible(fn (callable $get) => $get('enable_push_notification'))
+                                    ->required(fn (callable $get) => $get('enable_push_notification'))
+                                    ->helperText('Get this App ID from your OneSignal Dashboard Settings')
+                                    ->columnSpanFull(),
                             ])
                     ])
             ]);

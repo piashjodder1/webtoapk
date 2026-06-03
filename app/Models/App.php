@@ -26,6 +26,7 @@ class App extends Model
         'apk_url',
         'aab_url',
         'build_status',
+        'onesignal_app_id',
     ];
 
     protected $casts = [

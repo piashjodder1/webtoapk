@@ -60,6 +60,7 @@ class GitHubService
             'enable_pull_refresh' => $app->enable_pull_refresh ? 'true' : 'false',
             'enable_offline_page' => $app->enable_offline_page ? 'true' : 'false',
             'enable_push_notification' => $app->enable_push_notification ? 'true' : 'false',
+            'onesignal_app_id' => $app->onesignal_app_id ?? '',
             'enable_admob' => $app->enable_admob ? 'true' : 'false',
             'build_type' => $build->build_type,
             'callback_url' => route('api.build-callback'),

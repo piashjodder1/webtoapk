@@ -27,6 +27,8 @@ class BuildCallbackController extends Controller
             'github_run_id' => 'nullable|string',
             'apk_file' => 'nullable|file',
             'aab_file' => 'nullable|file',
+            'apk_url' => 'nullable|string|url',
+            'aab_url' => 'nullable|string|url',
             'build_log' => 'nullable|string',
             'token' => 'required|string',
         ]);
@@ -78,7 +80,7 @@ class BuildCallbackController extends Controller
             return response()->json(['message' => 'Build status updated to building.']);
         }
 
-        // Processing 'completed' status with potential file uploads
+        // Processing 'completed' status with potential file uploads or URLs
         $storageService = new StorageService();
 
         if ($request->hasFile('apk_file')) {
@@ -86,11 +88,17 @@ class BuildCallbackController extends Controller
             // Let's save APK file
             $build->apk_url = $storageService->getUrl($apkPath);
             $app->apk_url = $build->apk_url;
+        } elseif ($request->filled('apk_url')) {
+            $build->apk_url = $request->input('apk_url');
+            $app->apk_url = $build->apk_url;
         }
 
         if ($request->hasFile('aab_file')) {
             $aabPath = $storageService->uploadIcon($request->file('aab_file'), $app->package_name . '/builds/aab');
             $build->aab_url = $storageService->getUrl($aabPath);
+            $app->aab_url = $build->aab_url;
+        } elseif ($request->filled('aab_url')) {
+            $build->aab_url = $request->input('aab_url');
             $app->aab_url = $build->aab_url;
         }
 

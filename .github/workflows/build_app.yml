@@ -36,6 +36,9 @@ on:
         description: 'Enable Push Notifications (true/false)'
         required: true
         default: 'false'
+      onesignal_app_id:
+        description: 'OneSignal App ID'
+        required: false
       enable_admob:
         description: 'Enable Google AdMob (true/false)'
         required: true
@@ -129,6 +132,7 @@ jobs:
             "enable_pull_refresh": ${{ github.event.inputs.enable_pull_refresh }},
             "enable_offline_page": ${{ github.event.inputs.enable_offline_page }},
             "enable_push_notification": ${{ github.event.inputs.enable_push_notification }},
+            "onesignal_app_id": "${{ github.event.inputs.onesignal_app_id }}",
             "enable_admob": ${{ github.event.inputs.enable_admob }},
             "admob_app_id": "${{ github.event.inputs.admob_app_id }}",
             "admob_banner_unit_id": "${{ github.event.inputs.admob_banner_unit_id }}",
@@ -219,19 +223,35 @@ jobs:
           cd flutter-template
           flutter build appbundle --release >> ../build_output.log 2>&1
 
+      - name: Send Uploading Callback
+        if: success()
+        run: |
+          curl -X POST "${{ github.event.inputs.callback_url }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "build_id": "${{ github.event.inputs.build_id }}",
+              "status": "building",
+              "github_run_id": "${{ github.run_id }}",
+              "build_log": "[Stage 4/5] Compilation complete.\n[Stage 5/5] Uploading binaries to secure transfer storage...",
+              "token": "${{ github.event.inputs.callback_token }}"
+            }'
+
       - name: Dispatch Completed Status with Files
         if: success()
         run: |
-          # Prepare file arguments
-          APK_ARG=""
-          AAB_ARG=""
+          APK_URL=""
+          AAB_URL=""
           
           if [ -f "flutter-template/build/app/outputs/flutter-apk/app-release.apk" ]; then
-            APK_ARG="-F apk_file=@flutter-template/build/app/outputs/flutter-apk/app-release.apk"
+            echo "Uploading APK to transfer.sh..."
+            APK_URL=$(curl -s --upload-file flutter-template/build/app/outputs/flutter-apk/app-release.apk https://transfer.sh/app-release.apk)
+            echo "APK URL: $APK_URL"
           fi
           
           if [ -f "flutter-template/build/app/outputs/bundle/release/app-release.aab" ]; then
-            AAB_ARG="-F aab_file=@flutter-template/build/app/outputs/bundle/release/app-release.aab"
+            echo "Uploading AAB to transfer.sh..."
+            AAB_URL=$(curl -s --upload-file flutter-template/build/app/outputs/bundle/release/app-release.aab https://transfer.sh/app-release.aab)
+            echo "AAB URL: $AAB_URL"
           fi
           
           curl -X POST "${{ github.event.inputs.callback_url }}" \
@@ -239,8 +259,8 @@ jobs:
             -F "status=completed" \
             -F "github_run_id=${{ github.run_id }}" \
             -F "token=${{ github.event.inputs.callback_token }}" \
-            $APK_ARG \
-            $AAB_ARG
+            -F "apk_url=$APK_URL" \
+            -F "aab_url=$AAB_URL"
 
       - name: Handle Workflow Failure
         if: failure()
