@@ -47,11 +47,13 @@ class AppForm
                             ->schema([
                                 FileUpload::make('icon_path')
                                     ->image()
+                                    ->disk('public')
                                     ->directory('icons')
                                     ->label('App Icon'),
 
                                 FileUpload::make('splash_path')
                                     ->image()
+                                    ->disk('public')
                                     ->directory('splashes')
                                     ->label('Splash Screen'),
                             ]),
