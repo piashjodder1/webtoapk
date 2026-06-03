@@ -75,6 +75,7 @@ jobs:
               "build_id": "${{ github.event.inputs.build_id }}",
               "status": "building",
               "github_run_id": "${{ github.run_id }}",
+              "build_log": "[Stage 1/5] Code checked out. Setting up JDK & Flutter SDK...",
               "token": "${{ github.event.inputs.callback_token }}"
             }'
 
@@ -105,6 +106,18 @@ jobs:
         run: |
           cd flutter-template
           flutter pub get
+
+      - name: Send Dependencies Installed Callback
+        run: |
+          curl -X POST "${{ github.event.inputs.callback_url }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "build_id": "${{ github.event.inputs.build_id }}",
+              "status": "building",
+              "github_run_id": "${{ github.run_id }}",
+              "build_log": "[Stage 1/5] Java & Flutter environments ready.\n[Stage 2/5] Flutter packages installed successfully. Ready to customize...",
+              "token": "${{ github.event.inputs.callback_token }}"
+            }'
 
       - name: Generate Dynamic Config JSON
         run: |
@@ -169,6 +182,30 @@ jobs:
               with open(gradle_path, 'w') as f:
                   f.write(content)
           EOF
+
+      - name: Send Asset Injection Callback
+        run: |
+          curl -X POST "${{ github.event.inputs.callback_url }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "build_id": "${{ github.event.inputs.build_id }}",
+              "status": "building",
+              "github_run_id": "${{ github.run_id }}",
+              "build_log": "[Stage 2/5] Dependencies ready.\n[Stage 3/5] App package identity, app label name, permissions, and launcher icons injected successfully.",
+              "token": "${{ github.event.inputs.callback_token }}"
+            }'
+
+      - name: Send Starting Compilation Callback
+        run: |
+          curl -X POST "${{ github.event.inputs.callback_url }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "build_id": "${{ github.event.inputs.build_id }}",
+              "status": "building",
+              "github_run_id": "${{ github.run_id }}",
+              "build_log": "[Stage 3/5] Customization complete.\n[Stage 4/5] Starting Flutter release build (Compiling Gradle task assembleRelease/bundleRelease)... This will take 1-2 minutes.",
+              "token": "${{ github.event.inputs.callback_token }}"
+            }'
 
       - name: Build APK (Release)
         if: ${{ github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == 'both' }}

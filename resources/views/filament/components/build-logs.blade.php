@@ -1,4 +1,4 @@
-<div class="build-logs-container select-none">
+<div class="build-logs-container select-none" wire:poll.2s>
     <!-- Premium Status Header Card -->
     <div class="build-header">
         <div class="build-info-group">
