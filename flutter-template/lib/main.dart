@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'config.dart';
@@ -16,15 +15,6 @@ void main() async {
   
   // Load settings from config.json
   await AppConfig.loadConfig();
-
-  // Initialize AdMob if enabled
-  if (AppConfig.enableAdmob) {
-    try {
-      await MobileAds.instance.initialize();
-    } catch (e) {
-      print("AdMob initialization failed: $e");
-    }
-  }
 
   // Initialize Firebase if enabled
   if (AppConfig.enablePushNotification) {

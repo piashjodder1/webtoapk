@@ -56,6 +56,9 @@ on:
       callback_url:
         description: 'Webhook Callback URL'
         required: true
+      callback_token:
+        description: 'Callback Authentication Token'
+        required: true
 
 jobs:
   build:
@@ -72,7 +75,7 @@ jobs:
               "build_id": "${{ github.event.inputs.build_id }}",
               "status": "building",
               "github_run_id": "${{ github.run_id }}",
-              "token": "${{ secrets.API_CALLBACK_TOKEN }}"
+              "token": "${{ github.event.inputs.callback_token }}"
             }'
 
       - name: Set up Java Development Kit (JDK)
@@ -160,13 +163,13 @@ jobs:
         if: ${{ github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == 'both' }}
         run: |
           cd flutter-template
-          flutter build apk --release
+          flutter build apk --release > ../build_output.log 2>&1
 
       - name: Build AAB (Release)
         if: ${{ github.event.inputs.build_type == 'aab' || github.event.inputs.build_type == 'both' }}
         run: |
           cd flutter-template
-          flutter build appbundle --release
+          flutter build appbundle --release >> ../build_output.log 2>&1
 
       - name: Dispatch Completed Status with Files
         if: success()
@@ -187,19 +190,27 @@ jobs:
             -F "build_id=${{ github.event.inputs.build_id }}" \
             -F "status=completed" \
             -F "github_run_id=${{ github.run_id }}" \
-            -F "token=${{ secrets.API_CALLBACK_TOKEN }}" \
+            -F "token=${{ github.event.inputs.callback_token }}" \
             $APK_ARG \
             $AAB_ARG
 
       - name: Handle Workflow Failure
         if: failure()
         run: |
+          LOG_CONTENT="GitHub Workflow execution failed."
+          if [ -f "build_output.log" ]; then
+            # Clean up the log content to be JSON safe
+            LOG_CONTENT=$(tail -n 250 build_output.log | jq -aRs .)
+          else
+            LOG_CONTENT='"No build logs generated. Please check GitHub panel."'
+          fi
+          
           curl -X POST "${{ github.event.inputs.callback_url }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "build_id": "${{ github.event.inputs.build_id }}",
-              "status": "failed",
-              "github_run_id": "${{ github.run_id }}",
-              "build_log": "GitHub Workflow execution failed. Please review execution logs inside GitHub panel.",
-              "token": "${{ secrets.API_CALLBACK_TOKEN }}"
-            }'
+            -d "{
+              \"build_id\": \"${{ github.event.inputs.build_id }}\",
+              \"status\": \"failed\",
+              \"github_run_id\": \"${{ github.run_id }}\",
+              \"build_log\": $LOG_CONTENT,
+              \"token\": \"${{ github.event.inputs.callback_token }}\"
+            }"

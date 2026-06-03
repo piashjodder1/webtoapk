@@ -63,6 +63,7 @@ class GitHubService
             'enable_admob' => $app->enable_admob ? 'true' : 'false',
             'build_type' => $build->build_type,
             'callback_url' => route('api.build-callback'),
+            'callback_token' => Setting::get('build_callback_token', 'default_callback_secret_token_123'),
         ];
 
         // Fetch settings for integrations to pass them to actions if required
