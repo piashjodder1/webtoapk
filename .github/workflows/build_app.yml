@@ -202,13 +202,13 @@ jobs:
         if: ${{ github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == 'both' }}
         run: |
           cd android-template
-          ./gradlew assembleRelease > ../build_output.log 2>&1
+          ./gradlew assembleRelease --stacktrace 2>&1 | tee ../build_output.log
 
       - name: Build AAB (Release)
         if: ${{ github.event.inputs.build_type == 'aab' || github.event.inputs.build_type == 'both' }}
         run: |
           cd android-template
-          ./gradlew bundleRelease >> ../build_output.log 2>&1
+          ./gradlew bundleRelease --stacktrace 2>&1 | tee -a ../build_output.log
 
       # ── STEP 5: Upload to Cloudflare R2 or uguu.se fallback ──────────────
       - name: Send Uploading Callback
