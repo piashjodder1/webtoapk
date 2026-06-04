@@ -109,8 +109,13 @@ jobs:
       - name: Install Python, Pillow, and Upload Tools
         run: |
           sudo apt-get update || true
-          sudo apt-get install -y python3 python3-pip awscli jq curl
+          sudo apt-get install -y python3 python3-pip jq curl unzip
           python3 -m pip install Pillow --break-system-packages
+          # Install AWS CLI v2
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+          unzip -q /tmp/awscliv2.zip -d /tmp
+          sudo /tmp/aws/install
+          rm -rf /tmp/awscliv2.zip /tmp/aws
 
       # ── STEP 2 & 3: Process Icon, Package Name, and App Label ─────────────
       - name: Process Icon, Package Name, and App Label
