@@ -35,11 +35,6 @@ class Settings extends Page implements HasForms
             'github_token',
             'github_workflow_id',
             'build_callback_token',
-            'firebase_server_key',
-            'firebase_api_key',
-            'admob_app_id_android',
-            'admob_banner_unit_id',
-            'admob_interstitial_unit_id',
             'storage_driver',
             's3_key',
             's3_secret',
@@ -98,45 +93,6 @@ class Settings extends Page implements HasForms
                                             ->label('Build Callback Secret Token')
                                             ->required()
                                             ->helperText('Configure this value as a secret named API_CALLBACK_TOKEN in your GitHub repository secrets so runners can authenticate updates.'),
-                                    ]),
-                            ]),
-
-                        Tab::make('Integrations')
-                            ->icon('heroicon-o-puzzle-piece')
-                            ->schema([
-                                Grid::make(2)
-                                    ->schema([
-                                        Placeholder::make('firebase_label')
-                                            ->label('Firebase Messaging')
-                                            ->content('Configuration for Push Notifications')
-                                            ->columnSpan(2),
-
-                                        TextInput::make('firebase_server_key')
-                                            ->label('Firebase Cloud Messaging Server Key')
-                                            ->password()
-                                            ->columnSpan(2),
-
-                                        TextInput::make('firebase_api_key')
-                                            ->label('Firebase API Key (for Android config)')
-                                            ->columnSpan(2),
-
-                                        Placeholder::make('admob_label')
-                                            ->label('Google AdMob Ads')
-                                            ->content('Global AdMob identifiers (can be overridden per app)')
-                                            ->columnSpan(2),
-
-                                        TextInput::make('admob_app_id_android')
-                                            ->label('AdMob Application ID (Android)')
-                                            ->placeholder('ca-app-pub-xxxxxxxxxxxxxxxx~xxxxxxxxxx'),
-
-                                        TextInput::make('admob_banner_unit_id')
-                                            ->label('Default Banner Ad Unit ID')
-                                            ->placeholder('ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx'),
-
-                                        TextInput::make('admob_interstitial_unit_id')
-                                            ->label('Default Interstitial Ad Unit ID')
-                                            ->placeholder('ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx')
-                                            ->columnSpan(2),
                                     ]),
                             ]),
 
@@ -205,10 +161,6 @@ class Settings extends Page implements HasForms
             $group = 'general';
             if (str_starts_with($key, 'github_')) {
                 $group = 'github';
-            } elseif (str_starts_with($key, 'firebase_')) {
-                $group = 'firebase';
-            } elseif (str_starts_with($key, 'admob_')) {
-                $group = 'admob';
             } elseif (in_array($key, ['storage_driver', 's3_key', 's3_secret', 's3_bucket', 's3_region', 'r2_key', 'r2_secret', 'r2_bucket', 'r2_endpoint'])) {
                 $group = 'storage';
             }

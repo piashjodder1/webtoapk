@@ -75,7 +75,8 @@ class AppForm
                                             ->live(),
 
                                         Toggle::make('enable_admob')
-                                            ->label('Google AdMob'),
+                                            ->label('Google AdMob')
+                                            ->live(),
                                     ]),
 
                                 TextInput::make('onesignal_app_id')
@@ -85,6 +86,27 @@ class AppForm
                                     ->required(fn (callable $get) => $get('enable_push_notification'))
                                     ->helperText('Get this App ID from your OneSignal Dashboard Settings')
                                     ->columnSpanFull(),
+
+                                TextInput::make('admob_app_id')
+                                    ->label('AdMob Application ID (Android)')
+                                    ->placeholder('e.g. ca-app-pub-xxxxxxxxxxxxxxxx~xxxxxxxxxx')
+                                    ->visible(fn (callable $get) => $get('enable_admob'))
+                                    ->required(fn (callable $get) => $get('enable_admob'))
+                                    ->columnSpanFull(),
+
+                                TextInput::make('admob_banner_unit_id')
+                                    ->label('AdMob Banner Ad Unit ID')
+                                    ->placeholder('e.g. ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx')
+                                    ->visible(fn (callable $get) => $get('enable_admob'))
+                                    ->required(fn (callable $get) => $get('enable_admob'))
+                                    ->columnSpan(1),
+
+                                TextInput::make('admob_interstitial_unit_id')
+                                    ->label('AdMob Interstitial Ad Unit ID')
+                                    ->placeholder('e.g. ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx')
+                                    ->visible(fn (callable $get) => $get('enable_admob'))
+                                    ->required(fn (callable $get) => $get('enable_admob'))
+                                    ->columnSpan(1),
                             ])
                     ])
             ]);

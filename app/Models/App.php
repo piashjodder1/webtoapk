@@ -27,6 +27,9 @@ class App extends Model
         'aab_url',
         'build_status',
         'onesignal_app_id',
+        'admob_app_id',
+        'admob_banner_unit_id',
+        'admob_interstitial_unit_id',
     ];
 
     protected $casts = [

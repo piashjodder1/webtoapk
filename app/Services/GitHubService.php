@@ -67,10 +67,10 @@ class GitHubService
             'callback_token' => Setting::get('build_callback_token', 'default_callback_secret_token_123'),
         ];
 
-        // Fetch settings for integrations to pass them to actions if required
-        $inputs['admob_app_id'] = Setting::get('admob_app_id_android') ?? '';
-        $inputs['admob_banner_unit_id'] = Setting::get('admob_banner_unit_id') ?? '';
-        $inputs['admob_interstitial_unit_id'] = Setting::get('admob_interstitial_unit_id') ?? '';
+        // Pass app-specific AdMob settings
+        $inputs['admob_app_id'] = $app->admob_app_id ?? '';
+        $inputs['admob_banner_unit_id'] = $app->admob_banner_unit_id ?? '';
+        $inputs['admob_interstitial_unit_id'] = $app->admob_interstitial_unit_id ?? '';
 
         Log::info("Triggering GitHub Workflow Dispatch at {$url}", $inputs);
 
