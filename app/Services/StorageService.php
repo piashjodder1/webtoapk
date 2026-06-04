@@ -66,7 +66,7 @@ class StorageService
         }
 
         // App icons and splash images are always stored locally
-        if (str_starts_with($path, 'apps/')) {
+        if (str_starts_with($path, 'apps/') || str_starts_with($path, 'icons/') || str_starts_with($path, 'splashes/')) {
             return Storage::disk('public')->url($path);
         }
 
@@ -91,7 +91,7 @@ class StorageService
      */
     public function delete(string $path): bool
     {
-        if (str_starts_with($path, 'apps/')) {
+        if (str_starts_with($path, 'apps/') || str_starts_with($path, 'icons/') || str_starts_with($path, 'splashes/')) {
             return Storage::disk('public')->delete($path);
         }
         return $this->getDisk()->delete($path);
@@ -102,7 +102,7 @@ class StorageService
      */
     public function deleteDirectory(string $directory): bool
     {
-        if (str_starts_with($directory, 'apps/')) {
+        if (str_starts_with($directory, 'apps/') || str_starts_with($directory, 'icons/') || str_starts_with($directory, 'splashes/')) {
             return Storage::disk('public')->deleteDirectory($directory);
         }
         return $this->getDisk()->deleteDirectory($directory);

@@ -46,6 +46,14 @@ class App extends Model
     {
         static::deleting(function ($app) {
             $storageService = new \App\Services\StorageService();
+            // Delete the icon file if it exists
+            if ($app->icon_path) {
+                $storageService->delete($app->icon_path);
+            }
+            // Delete the splash file if it exists
+            if ($app->splash_path) {
+                $storageService->delete($app->splash_path);
+            }
             // Delete all builds and files associated with this app
             $storageService->deleteDirectory($app->package_name);
             $storageService->deleteDirectory(\Illuminate\Support\Str::slug($app->package_name));
