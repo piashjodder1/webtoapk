@@ -173,23 +173,23 @@ jobs:
           icon_url = "${{ github.event.inputs.icon_url }}"
           logo_path = "flutter-template/assets/logo.png"
 
-          print(f"Downloading icon from {icon_url}...")
-          response = requests.get(icon_url)
-          if response.status_code == 200:
-              os.makedirs(os.path.dirname(logo_path), exist_ok=True)
-              with open(logo_path, 'wb') as f:
-                  f.write(response.content)
-              print("Icon downloaded successfully to assets/logo.png.")
-              
-              sizes = {
-                  "mipmap-mdpi": (48, 48),
-                  "mipmap-hdpi": (72, 72),
-                  "mipmap-xhdpi": (96, 96),
-                  "mipmap-xxhdpi": (144, 144),
-                  "mipmap-xxxhdpi": (192, 192)
-              }
-              
-              try:
+          try:
+              print(f"Downloading icon from {icon_url}...")
+              response = requests.get(icon_url, timeout=15)
+              if response.status_code == 200:
+                  os.makedirs(os.path.dirname(logo_path), exist_ok=True)
+                  with open(logo_path, 'wb') as f:
+                      f.write(response.content)
+                  print("Icon downloaded successfully to assets/logo.png.")
+                  
+                  sizes = {
+                      "mipmap-mdpi": (48, 48),
+                      "mipmap-hdpi": (72, 72),
+                      "mipmap-xhdpi": (96, 96),
+                      "mipmap-xxhdpi": (144, 144),
+                      "mipmap-xxxhdpi": (192, 192)
+                  }
+                  
                   with Image.open(logo_path) as img:
                       for folder, size in sizes.items():
                           res_path = f"flutter-template/android/app/src/main/res/{folder}/ic_launcher.png"
@@ -197,12 +197,10 @@ jobs:
                           resized_img = img.convert("RGBA").resize(size, Image.Resampling.LANCZOS if hasattr(Image, 'Resampling') else Image.ANTIALIAS)
                           resized_img.save(res_path, "PNG")
                           print(f"Generated {res_path} with size {size}")
-              except Exception as e:
-                  print(f"Error processing image: {e}")
-                  exit(1)
-          else:
-              print(f"Failed to download icon, status code: {response.status_code}")
-              exit(1)
+              else:
+                  print(f"Warning: Failed to download icon, status code: {response.status_code}. Proceeding with default template icons.")
+          except Exception as e:
+              print(f"Warning: Error downloading or replacing icon: {e}. Proceeding with default template icons.")
           EOF
 
       - name: Replace Package Name and App Label
