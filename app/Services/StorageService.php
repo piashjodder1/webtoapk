@@ -39,7 +39,7 @@ class StorageService
      */
     public function uploadIcon(UploadedFile $file, string $packageName): string
     {
-        $disk = $this->getDisk();
+        $disk = Storage::disk('public');
         $filename = 'apps/' . Str::slug($packageName) . '/icon.' . $file->getClientOriginalExtension();
         $disk->put($filename, file_get_contents($file), 'public');
         return $filename;
@@ -50,7 +50,7 @@ class StorageService
      */
     public function uploadSplash(UploadedFile $file, string $packageName): string
     {
-        $disk = $this->getDisk();
+        $disk = Storage::disk('public');
         $filename = 'apps/' . Str::slug($packageName) . '/splash.' . $file->getClientOriginalExtension();
         $disk->put($filename, file_get_contents($file), 'public');
         return $filename;
@@ -63,6 +63,11 @@ class StorageService
     {
         if (!$path) {
             return null;
+        }
+
+        // App icons and splash images are always stored locally
+        if (str_starts_with($path, 'apps/')) {
+            return Storage::disk('public')->url($path);
         }
 
         $driver = Setting::get('storage_driver', 'local');
@@ -86,6 +91,9 @@ class StorageService
      */
     public function delete(string $path): bool
     {
+        if (str_starts_with($path, 'apps/')) {
+            return Storage::disk('public')->delete($path);
+        }
         return $this->getDisk()->delete($path);
     }
 
@@ -94,6 +102,9 @@ class StorageService
      */
     public function deleteDirectory(string $directory): bool
     {
+        if (str_starts_with($directory, 'apps/')) {
+            return Storage::disk('public')->deleteDirectory($directory);
+        }
         return $this->getDisk()->deleteDirectory($directory);
     }
 }

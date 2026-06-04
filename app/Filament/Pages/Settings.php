@@ -99,7 +99,7 @@ class Settings extends Page implements HasForms
                                 Grid::make(2)
                                     ->schema([
                                         Select::make('storage_driver')
-                                            ->label('Active Storage Disk')
+                                            ->label('Active Build Storage Disk')
                                             ->options([
                                                 'local' => 'Local Disk (public/storage)',
                                                 'r2' => 'Cloudflare R2',
@@ -107,6 +107,7 @@ class Settings extends Page implements HasForms
                                             ->default('local')
                                             ->required()
                                             ->reactive()
+                                            ->helperText('Select where generated APK and AAB build files will be stored. Note: Application branding assets (icons, splash screens) are always saved on the server\'s local disk.')
                                             ->columnSpan(2),
 
                                         // Cloudflare R2 fields
