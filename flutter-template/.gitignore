@@ -32,6 +32,8 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+# vendor/ is intentionally committed for faster CI builds
+!vendor/
 
 # Symbolication related
 app.*.symbols
