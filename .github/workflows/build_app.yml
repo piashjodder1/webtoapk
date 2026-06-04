@@ -141,65 +141,72 @@ jobs:
           echo "config.json written:"
           cat flutter-template/assets/config.json
 
-      # ── STEP 2: Replace icon using ImageMagick (pre-installed, no pip) ────
-      - name: Download and Resize Launcher Icon
-        if: ${{ github.event.inputs.icon_url != '' }}
-        run: |
-          ICON_URL="${{ github.event.inputs.icon_url }}"
-          ICON_TMP="/tmp/app_icon_original.png"
+      - name: Install Pillow for Icon Processing
+        run: python3 -m pip install Pillow
 
-          echo "Downloading icon from $ICON_URL..."
-          if curl -fsSL --max-time 15 -o "$ICON_TMP" "$ICON_URL"; then
-            echo "Icon downloaded ($(du -sh $ICON_TMP | cut -f1))"
-
-            # Copy to Flutter assets
-            cp "$ICON_TMP" flutter-template/assets/logo.png
-
-            # Resize to all Android mipmap densities using ImageMagick (pre-installed)
-            declare -A SIZES=(
-              ["mipmap-mdpi"]=48
-              ["mipmap-hdpi"]=72
-              ["mipmap-xhdpi"]=96
-              ["mipmap-xxhdpi"]=144
-              ["mipmap-xxxhdpi"]=192
-            )
-            for FOLDER in "${!SIZES[@]}"; do
-              SIZE="${SIZES[$FOLDER]}"
-              DEST="flutter-template/android/app/src/main/res/${FOLDER}/ic_launcher.png"
-              mkdir -p "$(dirname $DEST)"
-              convert "$ICON_TMP" -resize "${SIZE}x${SIZE}" "$DEST"
-              echo "  Generated $DEST (${SIZE}x${SIZE}px)"
-            done
-            echo "All launcher icons replaced successfully."
-          else
-            echo "Warning: Failed to download icon from $ICON_URL. Using default template icon."
-          fi
-
-      # ── STEP 3: Replace Package Name and App Label in Android files ───────
-      - name: Replace Package Name and App Label
+      # ── STEP 2 & 3: Process Icon, Package Name, and App Label ─────────────
+      - name: Process Icon, Package Name, and App Label
         run: |
           python3 - << 'EOF'
-          import os, re
+          import os, re, urllib.request
+          from PIL import Image
 
-          app_name    = "${{ github.event.inputs.app_name }}"
+          icon_url = "${{ github.event.inputs.icon_url }}"
+          app_name = "${{ github.event.inputs.app_name }}"
           package_name = "${{ github.event.inputs.package_name }}"
 
-          # 1. AndroidManifest.xml — update label
+          # ── 1. Icon Download and Resizing ──
+          if icon_url:
+              try:
+                  print(f"Downloading icon from {icon_url}...")
+                  icon_tmp = "/tmp/app_icon_original.png"
+                  urllib.request.urlretrieve(icon_url, icon_tmp)
+                  print("Icon downloaded successfully.")
+
+                  # Save to Flutter assets
+                  im = Image.open(icon_tmp)
+                  im.save("flutter-template/assets/logo.png")
+
+                  # Resize to mipmaps
+                  sizes = {
+                      "mipmap-mdpi": 48,
+                      "mipmap-hdpi": 72,
+                      "mipmap-xhdpi": 96,
+                      "mipmap-xxhdpi": 144,
+                      "mipmap-xxxhdpi": 192
+                  }
+                  for folder, size in sizes.items():
+                      dest = f"flutter-template/android/app/src/main/res/{folder}/ic_launcher.png"
+                      os.makedirs(os.path.dirname(dest), exist_ok=True)
+                      
+                      # Safe Lanczos resizing (compatible with all Pillow versions)
+                      resampling = Image.Resampling.LANCZOS if hasattr(Image, 'Resampling') else Image.LANCZOS
+                      resized = im.resize((size, size), resampling)
+                      resized.save(dest)
+                      print(f"  Generated {dest} ({size}x{size}px)")
+                  print("All launcher icons processed.")
+              except Exception as e:
+                  print(f"Warning: Icon processing failed: {e}. Using default template icon.")
+          else:
+              print("No icon URL provided, using default template icon.")
+
+          # ── 2. Manifest and Gradle Edits ──
+          # Update label in AndroidManifest.xml
           manifest = "flutter-template/android/app/src/main/AndroidManifest.xml"
           if os.path.exists(manifest):
               c = open(manifest).read()
               c = re.sub(r'android:label="[^"]+"', f'android:label="{app_name}"', c)
               open(manifest, 'w').write(c)
-              print(f"Manifest label → {app_name}")
+              print(f"Manifest label updated → {app_name}")
 
-          # 2. build.gradle.kts — update applicationId and namespace
+          # Update applicationId and namespace in build.gradle.kts
           gradle = "flutter-template/android/app/build.gradle.kts"
           if os.path.exists(gradle):
               c = open(gradle).read()
               c = re.sub(r'applicationId\s*=\s*"[^"]+"', f'applicationId = "{package_name}"', c)
               c = re.sub(r'namespace\s*=\s*"[^"]+"',    f'namespace = "{package_name}"',    c)
               open(gradle, 'w').write(c)
-              print(f"Gradle applicationId/namespace → {package_name}")
+              print(f"Gradle applicationId and namespace updated → {package_name}")
           EOF
 
       - name: Send Build Starting Callback
