@@ -9,6 +9,8 @@ object AppConfig {
     var packageName: String = "com.webtoapp.template"
     var enablePullRefresh: Boolean = true
     var enableOfflinePage: Boolean = true
+    var enablePushNotification: Boolean = false
+    var onesignalAppId: String = ""
 
     fun loadConfig(context: Context) {
         try {
@@ -19,6 +21,8 @@ object AppConfig {
             packageName = json.optString("package_name", packageName)
             enablePullRefresh = json.optBoolean("enable_pull_refresh", enablePullRefresh)
             enableOfflinePage = json.optBoolean("enable_offline_page", enableOfflinePage)
+            enablePushNotification = json.optBoolean("enable_push_notification", enablePushNotification)
+            onesignalAppId = json.optString("onesignal_app_id", onesignalAppId)
         } catch (e: Exception) {
             e.printStackTrace()
         }

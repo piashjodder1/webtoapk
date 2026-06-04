@@ -6,6 +6,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\ConditionalRender;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -69,7 +70,20 @@ class AppForm
                                         Toggle::make('enable_offline_page')
                                             ->label('Offline Page'),
 
+                                        Toggle::make('enable_push_notification')
+                                            ->label('Push Notification (OneSignal)')
+                                            ->reactive(),
 
+                                    ]),
+
+                                ConditionalRender::make()
+                                    ->visible(fn ($get) => $get('enable_push_notification'))
+                                    ->schema([
+                                        TextInput::make('onesignal_app_id')
+                                            ->label('OneSignal App ID')
+                                            ->placeholder('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
+                                            ->helperText('Required if Push Notification is enabled. Get from OneSignal Dashboard > App Settings > Keys & IDs.')
+                                            ->required(fn ($get) => $get('enable_push_notification')),
                                     ]),
 
                             ])

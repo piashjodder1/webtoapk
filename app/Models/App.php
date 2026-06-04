@@ -21,6 +21,8 @@ class App extends Model
         'splash_path',
         'enable_pull_refresh',
         'enable_offline_page',
+        'enable_push_notification',
+        'onesignal_app_id',
         'apk_url',
         'aab_url',
         'build_status',
@@ -29,6 +31,7 @@ class App extends Model
     protected $casts = [
         'enable_pull_refresh' => 'boolean',
         'enable_offline_page' => 'boolean',
+        'enable_push_notification' => 'boolean',
 
     ];
 

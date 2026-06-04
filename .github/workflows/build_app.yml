@@ -32,6 +32,14 @@ on:
         description: 'Enable Offline Page (true/false)'
         required: true
         default: 'false'
+      enable_push_notification:
+        description: 'Enable Push Notification via OneSignal (true/false)'
+        required: true
+        default: 'false'
+      onesignal_app_id:
+        description: 'OneSignal App ID'
+        required: false
+        default: ''
 
       build_type:
         description: 'Build Format (apk, aab, both)'
@@ -93,7 +101,9 @@ jobs:
             "website_url": "${{ github.event.inputs.website_url }}",
             "package_name": "${{ github.event.inputs.package_name }}",
             "enable_pull_refresh": ${{ github.event.inputs.enable_pull_refresh }},
-            "enable_offline_page": ${{ github.event.inputs.enable_offline_page }}
+            "enable_offline_page": ${{ github.event.inputs.enable_offline_page }},
+            "enable_push_notification": ${{ github.event.inputs.enable_push_notification }},
+            "onesignal_app_id": "${{ github.event.inputs.onesignal_app_id }}"
           }
           EOF
           echo "config.json written:"

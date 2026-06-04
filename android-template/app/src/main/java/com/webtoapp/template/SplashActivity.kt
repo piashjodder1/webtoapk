@@ -7,7 +7,9 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.ImageView
 import android.widget.TextView
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.onesignal.OneSignal
 
 class SplashActivity : AppCompatActivity() {
 
@@ -17,6 +19,18 @@ class SplashActivity : AppCompatActivity() {
 
         // Load config from assets/config.json
         AppConfig.loadConfig(this)
+
+        // Initialize OneSignal if push notification is enabled
+        if (AppConfig.enablePushNotification && AppConfig.onesignalAppId.isNotEmpty()) {
+            try {
+                OneSignal.initWithContext(this, AppConfig.onesignalAppId)
+                Log.i("OneSignal", "OneSignal initialized with app ID: ${AppConfig.onesignalAppId}")
+            } catch (e: Exception) {
+                Log.e("OneSignal", "Failed to initialize OneSignal: ${e.message}")
+            }
+        } else {
+            Log.i("OneSignal", "Push notifications disabled. Skipping OneSignal init.")
+        }
 
         // Set dynamic app name
         val appNameTextView: TextView = findViewById(R.id.splash_app_name)
