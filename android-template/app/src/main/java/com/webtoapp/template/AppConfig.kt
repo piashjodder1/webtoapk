@@ -4,8 +4,8 @@ import android.content.Context
 import org.json.JSONObject
 
 object AppConfig {
-    var appName: String = "Website To App"
-    var websiteUrl: String = "https://laravel.com"
+    var appName: String = "App"
+    var websiteUrl: String = "https://example.com"
     var packageName: String = "com.webtoapp.template"
     var enablePullRefresh: Boolean = true
     var enableOfflinePage: Boolean = true

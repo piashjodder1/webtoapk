@@ -1,7 +1,11 @@
 {
-  "app_name": "Website To App",
-  "website_url": "https://laravel.com",
+  "app_name": "App",
+  "website_url": "https://example.com",
   "package_name": "com.example.webviewapp",
   "enable_pull_refresh": true,
-  "enable_offline_page": true
+  "enable_offline_page": true,
+  "enable_push_notification": false,
+  "onesignal_app_id": "",
+  "version_name": "1.0.0",
+  "version_code": 1
 }

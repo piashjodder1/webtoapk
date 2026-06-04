@@ -101,23 +101,36 @@ jobs:
 
       # ── STEP 1: Inject config.json ────────────────────────────────────────
       - name: Inject App Config
+        env:
+          APP_NAME: ${{ github.event.inputs.app_name }}
+          WEBSITE_URL: ${{ github.event.inputs.website_url }}
+          PACKAGE_NAME: ${{ github.event.inputs.package_name }}
+          ENABLE_PULL_REFRESH: ${{ github.event.inputs.enable_pull_refresh }}
+          ENABLE_OFFLINE_PAGE: ${{ github.event.inputs.enable_offline_page }}
+          ENABLE_PUSH_NOTIFICATION: ${{ github.event.inputs.enable_push_notification }}
+          ONESIGNAL_APP_ID: ${{ github.event.inputs.onesignal_app_id }}
+          VERSION_NAME: ${{ github.event.inputs.version_name }}
+          VERSION_CODE: ${{ github.event.inputs.version_code }}
         run: |
           mkdir -p android-template/app/src/main/assets
-          cat > android-template/app/src/main/assets/config.json << 'EOF'
-          {
-            "app_name": "${{ github.event.inputs.app_name }}",
-            "website_url": "${{ github.event.inputs.website_url }}",
-            "package_name": "${{ github.event.inputs.package_name }}",
-            "enable_pull_refresh": ${{ github.event.inputs.enable_pull_refresh }},
-            "enable_offline_page": ${{ github.event.inputs.enable_offline_page }},
-            "enable_push_notification": ${{ github.event.inputs.enable_push_notification }},
-            "onesignal_app_id": "${{ github.event.inputs.onesignal_app_id }}",
-            "version_name": "${{ github.event.inputs.version_name }}",
-            "version_code": ${{ github.event.inputs.version_code }}
-          }
-          EOF
-          echo "config.json written:"
-          cat android-template/app/src/main/assets/config.json
+          python3 -c "
+import json, os
+config = {
+    'app_name': os.environ['APP_NAME'],
+    'website_url': os.environ['WEBSITE_URL'],
+    'package_name': os.environ['PACKAGE_NAME'],
+    'enable_pull_refresh': os.environ['ENABLE_PULL_REFRESH'] == 'true',
+    'enable_offline_page': os.environ['ENABLE_OFFLINE_PAGE'] == 'true',
+    'enable_push_notification': os.environ['ENABLE_PUSH_NOTIFICATION'] == 'true',
+    'onesignal_app_id': os.environ['ONESIGNAL_APP_ID'],
+    'version_name': os.environ['VERSION_NAME'],
+    'version_code': int(os.environ['VERSION_CODE'])
+}
+with open('android-template/app/src/main/assets/config.json', 'w') as f:
+    json.dump(config, f, indent=2)
+print('config.json written:')
+os.system('cat android-template/app/src/main/assets/config.json')
+          "
 
       - name: Install Python Pillow
         run: |
@@ -176,13 +189,16 @@ jobs:
               print("No icon URL provided, using default template icon.")
 
           # ── 2. Resource App Name Edit ──
-          # Update label in strings.xml instead of AndroidManifest.xml directly
+          # Update label in strings.xml
+          def xml_escape(s):
+              return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&apos;')
           strings_path = "android-template/app/src/main/res/values/strings.xml"
           if os.path.exists(strings_path):
               c = open(strings_path).read()
-              c = re.sub(r'<string name="app_name">.*?</string>', f'<string name="app_name">{app_name}</string>', c)
+              escaped_name = xml_escape(app_name)
+              c = re.sub(r'<string name="app_name">.*?</string>', f'<string name="app_name">{escaped_name}</string>', c)
               open(strings_path, 'w').write(c)
-              print(f"strings.xml app_name updated → {app_name}")
+              print(f"strings.xml app_name updated → {escaped_name}")
 
           # ── 3. Gradle Package Name & Version Edit ──
           gradle_path = "android-template/app/build.gradle.kts"
@@ -229,11 +245,34 @@ jobs:
           cd android-template
           ./gradlew assembleRelease --stacktrace 2>&1 | tee ../build_output.log
 
+      - name: Rename APK output
+        if: ${{ github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == 'both' }}
+        run: |
+          APK_DIR="android-template/app/build/outputs/apk/release"
+          APP_SAFE_NAME=$(echo "${{ github.event.inputs.app_name }}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
+          if [ -f "$APK_DIR/app-release.apk" ]; then
+            mv "$APK_DIR/app-release.apk" "$APK_DIR/${APP_SAFE_NAME}-release.apk"
+            echo "APK renamed to ${APP_SAFE_NAME}-release.apk"
+          fi
+          if [ -f "$APK_DIR/app-release-unsigned.apk" ]; then
+            mv "$APK_DIR/app-release-unsigned.apk" "$APK_DIR/${APP_SAFE_NAME}-release-unsigned.apk"
+          fi
+
       - name: Build AAB (Release)
         if: ${{ github.event.inputs.build_type == 'aab' || github.event.inputs.build_type == 'both' }}
         run: |
           cd android-template
           ./gradlew bundleRelease --stacktrace 2>&1 | tee -a ../build_output.log
+
+      - name: Rename AAB output
+        if: ${{ github.event.inputs.build_type == 'aab' || github.event.inputs.build_type == 'both' }}
+        run: |
+          AAB_DIR="android-template/app/build/outputs/bundle/release"
+          APP_SAFE_NAME=$(echo "${{ github.event.inputs.app_name }}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
+          if [ -f "$AAB_DIR/app-release.aab" ]; then
+            mv "$AAB_DIR/app-release.aab" "$AAB_DIR/${APP_SAFE_NAME}-release.aab"
+            echo "AAB renamed to ${APP_SAFE_NAME}-release.aab"
+          fi
 
       # ── STEP 5: Upload to Cloudflare R2 or uguu.se fallback ──────────────
       - name: Send Uploading Callback
@@ -261,11 +300,13 @@ jobs:
           PKG_NAME="${{ github.event.inputs.package_name }}"
           BUILD_ID="${{ github.event.inputs.build_id }}"
 
+          APP_SAFE_NAME=$(echo "${{ github.event.inputs.app_name }}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
+
           # ── APK ──────────────────────────────────────────────────────────
-          APK_FILE="android-template/app/build/outputs/apk/release/app-release.apk"
+          APK_FILE="android-template/app/build/outputs/apk/release/${APP_SAFE_NAME}-release.apk"
           if [ -f "$APK_FILE" ]; then
             if [ -n "${{ github.event.inputs.r2_key }}" ]; then
-              R2_KEY="$PKG_NAME/builds/apk/app-release-${BUILD_ID}.apk"
+              R2_KEY="$PKG_NAME/builds/apk/${APP_SAFE_NAME}-release-${BUILD_ID}.apk"
               if aws s3 cp "$APK_FILE" "s3://${{ github.event.inputs.r2_bucket }}/$R2_KEY" \
                   --endpoint-url "${{ github.event.inputs.r2_endpoint }}" 2>&1; then
                 PUBLIC_URL="${{ github.event.inputs.r2_public_url }}"
@@ -285,21 +326,22 @@ jobs:
           fi
 
           # ── AAB ──────────────────────────────────────────────────────────
-          AAB_FILE="android-template/app/build/outputs/bundle/release/app-release.aab"
+          AAB_FILE="android-template/app/build/outputs/bundle/release/${APP_SAFE_NAME}-release.aab"
           if [ -f "$AAB_FILE" ]; then
             if [ -n "${{ github.event.inputs.r2_key }}" ]; then
-              R2_KEY="$PKG_NAME/builds/aab/app-release-${BUILD_ID}.aab"
+              R2_KEY="$PKG_NAME/builds/aab/${APP_SAFE_NAME}-release-${BUILD_ID}.aab"
               if aws s3 cp "$AAB_FILE" "s3://${{ github.event.inputs.r2_bucket }}/$R2_KEY" \
                   --endpoint-url "${{ github.event.inputs.r2_endpoint }}" 2>&1; then
                 PUBLIC_URL="${{ github.event.inputs.r2_public_url }}"
                 AAB_URL="${PUBLIC_URL%/}/$R2_KEY"
                 echo "AAB uploaded to R2: $AAB_URL"
               else
-                echo "R2 AAB upload failed, falling back to uguu.se..."
+                echo "AAB upload failed, falling back to uguu.se..."
                 RESP=$(curl -s -F "files[]=@$AAB_FILE" https://uguu.se/upload.php)
                 AAB_URL=$(echo "$RESP" | jq -r '.files[0].url // empty')
               fi
             else
+              echo "No R2 credentials, uploading to uguu.se..."
               RESP=$(curl -s -F "files[]=@$AAB_FILE" https://uguu.se/upload.php)
               AAB_URL=$(echo "$RESP" | jq -r '.files[0].url // empty')
             fi
