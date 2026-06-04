@@ -72,7 +72,7 @@ class Settings extends Page implements HasForms
                                             ->label('GitHub Repository')
                                             ->placeholder('owner/repository-name')
                                             ->required()
-                                            ->helperText('The repository where the Flutter WebView Template resides.'),
+                                            ->helperText('The repository where the Kotlin Android WebView Template resides.'),
 
                                         TextInput::make('github_workflow_id')
                                             ->label('GitHub Workflow File')

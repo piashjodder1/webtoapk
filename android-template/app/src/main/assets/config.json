@@ -1,0 +1,7 @@
+{
+  "app_name": "Website To App",
+  "website_url": "https://laravel.com",
+  "package_name": "com.example.webviewapp",
+  "enable_pull_refresh": true,
+  "enable_offline_page": true
+}

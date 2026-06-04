@@ -36,7 +36,7 @@ class DatabaseSeeder extends Seeder
         // Seed Default Settings
         $settings = [
             // GitHub Settings
-            ['key' => 'github_repository', 'value' => 'your-username/flutter-webview-template', 'group' => 'github'],
+            ['key' => 'github_repository', 'value' => 'your-username/android-webview-template', 'group' => 'github'],
             ['key' => 'github_token', 'value' => '', 'group' => 'github'],
             ['key' => 'github_workflow_id', 'value' => 'build_app.yml', 'group' => 'github'],
 

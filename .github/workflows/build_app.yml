@@ -66,11 +66,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/cirruslabs/flutter:stable
-    # PUB_CACHE points to vendor folder — no network download needed
-    env:
-      PUB_CACHE: ${{ github.workspace }}/flutter-template/vendor
 
     steps:
       - name: Checkout Code
@@ -88,34 +83,25 @@ jobs:
               "token": "${{ github.event.inputs.callback_token }}"
             }' || true
 
-
-
-      # ── STEP 1: Inject config.json (no download needed) ───────────────────
+      # ── STEP 1: Inject config.json ────────────────────────────────────────
       - name: Inject App Config
         run: |
-          cat > flutter-template/assets/config.json << 'EOF'
+          mkdir -p android-template/app/src/main/assets
+          cat > android-template/app/src/main/assets/config.json << 'EOF'
           {
             "app_name": "${{ github.event.inputs.app_name }}",
             "website_url": "${{ github.event.inputs.website_url }}",
             "package_name": "${{ github.event.inputs.package_name }}",
             "enable_pull_refresh": ${{ github.event.inputs.enable_pull_refresh }},
             "enable_offline_page": ${{ github.event.inputs.enable_offline_page }}
-
           }
           EOF
           echo "config.json written:"
-          cat flutter-template/assets/config.json
+          cat android-template/app/src/main/assets/config.json
 
-      - name: Install Python, Pillow, and Upload Tools
+      - name: Install Python Pillow
         run: |
-          sudo apt-get update || true
-          sudo apt-get install -y python3 python3-pip jq curl unzip
           python3 -m pip install Pillow --break-system-packages
-          # Install AWS CLI v2
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
-          unzip -q /tmp/awscliv2.zip -d /tmp
-          sudo /tmp/aws/install
-          rm -rf /tmp/awscliv2.zip /tmp/aws
 
       # ── STEP 2 & 3: Process Icon, Package Name, and App Label ─────────────
       - name: Process Icon, Package Name, and App Label
@@ -136,11 +122,12 @@ jobs:
                   urllib.request.urlretrieve(icon_url, icon_tmp)
                   print("Icon downloaded successfully.")
 
-                  # Save to Flutter assets
+                  # Save to Assets for Splash Activity fallback
                   im = Image.open(icon_tmp)
-                  im.save("flutter-template/assets/logo.png")
+                  os.makedirs("android-template/app/src/main/assets", exist_ok=True)
+                  im.save("android-template/app/src/main/assets/logo.png")
 
-                  # Resize to mipmaps
+                  # Resize to mipmaps (standard and round)
                   sizes = {
                       "mipmap-mdpi": 48,
                       "mipmap-hdpi": 72,
@@ -149,38 +136,51 @@ jobs:
                       "mipmap-xxxhdpi": 192
                   }
                   for folder, size in sizes.items():
-                      dest = f"flutter-template/android/app/src/main/res/{folder}/ic_launcher.png"
+                      # Standard launcher icon
+                      dest = f"android-template/app/src/main/res/{folder}/ic_launcher.png"
                       os.makedirs(os.path.dirname(dest), exist_ok=True)
-                      
-                      # Safe Lanczos resizing (compatible with all Pillow versions)
                       resampling = Image.Resampling.LANCZOS if hasattr(Image, 'Resampling') else Image.LANCZOS
                       resized = im.resize((size, size), resampling)
                       resized.save(dest)
-                      print(f"  Generated {dest} ({size}x{size}px)")
+                      
+                      # Round launcher icon
+                      dest_round = f"android-template/app/src/main/res/{folder}/ic_launcher_round.png"
+                      resized.save(dest_round)
+                      print(f"  Generated standard & round {folder} ({size}x{size}px)")
                   print("All launcher icons processed.")
               except Exception as e:
                   print(f"Warning: Icon processing failed: {e}. Using default template icon.")
           else:
               print("No icon URL provided, using default template icon.")
 
-          # ── 2. Manifest and Gradle Edits ──
-          # Update label in AndroidManifest.xml
-          manifest = "flutter-template/android/app/src/main/AndroidManifest.xml"
-          if os.path.exists(manifest):
-              c = open(manifest).read()
-              c = re.sub(r'android:label="[^"]+"', f'android:label="{app_name}"', c)
-              open(manifest, 'w').write(c)
-              print(f"Manifest label updated → {app_name}")
+          # ── 2. Resource App Name Edit ──
+          # Update label in strings.xml instead of AndroidManifest.xml directly
+          strings_path = "android-template/app/src/main/res/values/strings.xml"
+          if os.path.exists(strings_path):
+              c = open(strings_path).read()
+              c = re.sub(r'<string name="app_name">.*?</string>', f'<string name="app_name">{app_name}</string>', c)
+              open(strings_path, 'w').write(c)
+              print(f"strings.xml app_name updated → {app_name}")
 
-          # Update applicationId and namespace in build.gradle.kts
-          gradle = "flutter-template/android/app/build.gradle.kts"
-          if os.path.exists(gradle):
-              c = open(gradle).read()
+          # ── 3. Gradle Package Name Edit ──
+          # Update applicationId in build.gradle.kts
+          gradle_path = "android-template/app/build.gradle.kts"
+          if os.path.exists(gradle_path):
+              c = open(gradle_path).read()
               c = re.sub(r'applicationId\s*=\s*"[^"]+"', f'applicationId = "{package_name}"', c)
-              c = re.sub(r'namespace\s*=\s*"[^"]+"',    f'namespace = "{package_name}"',    c)
-              open(gradle, 'w').write(c)
-              print(f"Gradle applicationId and namespace updated → {package_name}")
+              open(gradle_path, 'w').write(c)
+              print(f"Gradle applicationId updated → {package_name}")
           EOF
+
+      # ── Set up JDK 17 & Gradle ──────────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Send Build Starting Callback
         run: |
@@ -190,27 +190,25 @@ jobs:
               "build_id": "${{ github.event.inputs.build_id }}",
               "status": "building",
               "github_run_id": "${{ github.run_id }}",
-              "build_log": "[1/4] Environment ready.\n[2/4] App config, icon, and package identity injected.\n[3/4] Compiling Flutter APK (using cached Gradle)...",
+              "build_log": "[1/4] Environment ready.\n[2/4] App config, icon, and package identity injected.\n[3/4] Compiling Native Android Release (Gradle cache active)...",
               "token": "${{ github.event.inputs.callback_token }}"
             }' || true
 
-      # ── STEP 4: Build — pub get from vendor (offline), then compile ───────
-      - name: Flutter pub get (offline from vendor)
-        run: |
-          cd flutter-template
-          flutter pub get --offline
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x android-template/gradlew
 
+      # ── STEP 4: Build APK and AAB ─────────────────────────────────────────
       - name: Build APK (Release)
         if: ${{ github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == 'both' }}
         run: |
-          cd flutter-template
-          flutter build apk --release --no-pub > ../build_output.log 2>&1
+          cd android-template
+          ./gradlew assembleRelease > ../build_output.log 2>&1
 
       - name: Build AAB (Release)
         if: ${{ github.event.inputs.build_type == 'aab' || github.event.inputs.build_type == 'both' }}
         run: |
-          cd flutter-template
-          flutter build appbundle --release --no-pub >> ../build_output.log 2>&1
+          cd android-template
+          ./gradlew bundleRelease >> ../build_output.log 2>&1
 
       # ── STEP 5: Upload to Cloudflare R2 or uguu.se fallback ──────────────
       - name: Send Uploading Callback
@@ -239,7 +237,7 @@ jobs:
           BUILD_ID="${{ github.event.inputs.build_id }}"
 
           # ── APK ──────────────────────────────────────────────────────────
-          APK_FILE="flutter-template/build/app/outputs/flutter-apk/app-release.apk"
+          APK_FILE="android-template/app/build/outputs/apk/release/app-release.apk"
           if [ -f "$APK_FILE" ]; then
             if [ -n "${{ github.event.inputs.r2_key }}" ]; then
               R2_KEY="$PKG_NAME/builds/apk/app-release-${BUILD_ID}.apk"
@@ -262,7 +260,7 @@ jobs:
           fi
 
           # ── AAB ──────────────────────────────────────────────────────────
-          AAB_FILE="flutter-template/build/app/outputs/bundle/release/app-release.aab"
+          AAB_FILE="android-template/app/build/outputs/bundle/release/app-release.aab"
           if [ -f "$AAB_FILE" ]; then
             if [ -n "${{ github.event.inputs.r2_key }}" ]; then
               R2_KEY="$PKG_NAME/builds/aab/app-release-${BUILD_ID}.aab"
