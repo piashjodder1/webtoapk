@@ -16,8 +16,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
   bool _isLoading = true;
   double _loadingProgress = 0;
   bool _isOffline = false;
-  // connectivity_plus v5.0.2 returns ConnectivityResult, not List
-  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  // connectivity_plus v5.x returns List<ConnectivityResult>
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
 
   @override
   void initState() {
@@ -36,8 +36,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
   // Check initial connection status
   void _checkInitialConnectivity() async {
     try {
-      final ConnectivityResult result = await Connectivity().checkConnectivity();
-      if (result == ConnectivityResult.none) {
+      final List<ConnectivityResult> result = await Connectivity().checkConnectivity();
+      if (result.contains(ConnectivityResult.none) || result.isEmpty) {
         if (mounted) {
           setState(() => _isOffline = true);
           _loadOfflinePage();
@@ -51,8 +51,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
   // Setup dynamic connectivity listener
   void _setupConnectivityListener() {
     _connectivitySubscription =
-        Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-      final bool offline = (result == ConnectivityResult.none);
+        Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> result) {
+      final bool offline = result.contains(ConnectivityResult.none) || result.isEmpty;
       if (offline) {
         if (mounted) {
           setState(() => _isOffline = true);

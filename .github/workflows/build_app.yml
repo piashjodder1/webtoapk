@@ -106,10 +106,10 @@ jobs:
           echo "config.json written:"
           cat flutter-template/assets/config.json
 
-      - name: Install Python and Pillow for Icon Processing
+      - name: Install Python, Pillow, and Upload Tools
         run: |
           sudo apt-get update || true
-          sudo apt-get install -y python3 python3-pip
+          sudo apt-get install -y python3 python3-pip awscli jq curl
           python3 -m pip install Pillow --break-system-packages
 
       # ── STEP 2 & 3: Process Icon, Package Name, and App Label ─────────────
