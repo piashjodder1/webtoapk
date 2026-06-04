@@ -37,7 +37,7 @@ class BuildsTable
 
                 TextColumn::make('build_type')
                     ->label('Type')
-                    ->uppercase()
+                    ->formatStateUsing(fn ($state) => strtoupper($state))
                     ->badge()
                     ->color('gray'),
 
