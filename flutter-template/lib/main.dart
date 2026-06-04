@@ -5,18 +5,18 @@ import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Load settings from config.json
   await AppConfig.loadConfig();
 
-  // Initialize OneSignal if enabled
+  // Initialize OneSignal only when push notification is enabled and App ID is set
   if (AppConfig.enablePushNotification && AppConfig.onesignalAppId.isNotEmpty) {
     try {
       OneSignal.Debug.setLogLevel(OSLogLevel.none);
       OneSignal.initialize(AppConfig.onesignalAppId);
-      OneSignal.Notifications.requestPermission(true);
+      await OneSignal.Notifications.requestPermission(false);
     } catch (e) {
-      print("OneSignal initialization failed: $e");
+      debugPrint("OneSignal initialization failed: $e");
     }
   }
 
