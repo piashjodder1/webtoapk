@@ -243,14 +243,16 @@ jobs:
           AAB_URL=""
           
           if [ -f "flutter-template/build/app/outputs/flutter-apk/app-release.apk" ]; then
-            echo "Uploading APK to transfer.sh..."
-            APK_URL=$(curl -s --upload-file flutter-template/build/app/outputs/flutter-apk/app-release.apk https://transfer.sh/app-release.apk)
+            echo "Uploading APK to uguu.se..."
+            RESPONSE=$(curl -s -F "files[]=@flutter-template/build/app/outputs/flutter-apk/app-release.apk" https://uguu.se/upload.php)
+            APK_URL=$(echo "$RESPONSE" | jq -r '.files[0].url')
             echo "APK URL: $APK_URL"
           fi
           
           if [ -f "flutter-template/build/app/outputs/bundle/release/app-release.aab" ]; then
-            echo "Uploading AAB to transfer.sh..."
-            AAB_URL=$(curl -s --upload-file flutter-template/build/app/outputs/bundle/release/app-release.aab https://transfer.sh/app-release.aab)
+            echo "Uploading AAB to uguu.se..."
+            RESPONSE=$(curl -s -F "files[]=@flutter-template/build/app/outputs/bundle/release/app-release.aab" https://uguu.se/upload.php)
+            AAB_URL=$(echo "$RESPONSE" | jq -r '.files[0].url')
             echo "AAB URL: $AAB_URL"
           fi
           
