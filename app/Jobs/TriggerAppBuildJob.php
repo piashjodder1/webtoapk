@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Build;
+use App\Models\Setting;
 use App\Services\GitHubService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -38,16 +39,27 @@ class TriggerAppBuildJob implements ShouldQueue
         $build->update(['build_status' => 'building']);
         $app->update(['build_status' => 'building']);
 
-        // Trigger GitHub Actions run
-        $success = $githubService->triggerBuild($app, $build);
+        try {
+            // Trigger GitHub Actions run
+            $success = $githubService->triggerBuild($app, $build);
 
-        if ($success) {
-            Log::info("GitHub workflow dispatch succeeded for build #{$build->id}");
-        } else {
-            Log::error("GitHub workflow dispatch failed for build #{$build->id}");
+            if ($success) {
+                Log::info("GitHub workflow dispatch succeeded for build #{$build->id}");
+            } else {
+                Log::error("GitHub workflow dispatch failed for build #{$build->id}");
+                $build->update([
+                    'build_status' => 'failed',
+                    'build_log' => Setting::get('github_token') && Setting::get('github_repository')
+                        ? 'GitHub API rejected the request. Check your token has "workflow" scope and the repository exists.'
+                        : 'GitHub settings not configured. Go to Admin > Settings and set GitHub Token and Repository.'
+                ]);
+                $app->update(['build_status' => 'failed']);
+            }
+        } catch (\Exception $e) {
+            Log::error("TriggerAppBuildJob exception for build #{$build->id}: " . $e->getMessage());
             $build->update([
                 'build_status' => 'failed',
-                'build_log' => 'Failed to trigger GitHub Action workflow. Please check your GitHub system settings (Token, Repository).'
+                'build_log' => 'Error: ' . $e->getMessage()
             ]);
             $app->update(['build_status' => 'failed']);
         }
