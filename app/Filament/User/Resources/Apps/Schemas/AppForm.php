@@ -60,6 +60,23 @@ class AppForm
                                     ->helperText('1242x2208 PNG format recommended'),
                             ]),
 
+                        Section::make('App Version')
+                            ->description('Set the version for your Android app')
+                            ->columnSpan(3)
+                            ->columns(4)
+                            ->schema([
+                                TextInput::make('version_name')
+                                    ->label('Version Name')
+                                    ->placeholder('1.0.0')
+                                    ->helperText('Display version (e.g. 1.0.0, 2.5.1)'),
+
+                                TextInput::make('version_code')
+                                    ->label('Version Code')
+                                    ->placeholder('1')
+                                    ->numeric()
+                                    ->helperText('Increment this number for each Play Store release'),
+                            ]),
+
                         Section::make('App Features')
                             ->description('Toggle WebView specific configurations')
                             ->columnSpan(3)
@@ -78,7 +95,6 @@ class AppForm
                                             ->label('Push Notification (OneSignal)')
                                             ->helperText('Send push notifications to users via OneSignal')
                                             ->reactive(),
-
                                     ]),
 
                                 TextInput::make('onesignal_app_id')
@@ -87,9 +103,8 @@ class AppForm
                                     ->helperText('Required if Push Notification is enabled. Get from OneSignal Dashboard > App Settings > Keys & IDs.')
                                     ->required(fn ($get) => $get('enable_push_notification'))
                                     ->hidden(fn ($get) => !$get('enable_push_notification')),
-
-                            ])
-                    ])
+                            ]),
+                    ]),
             ]);
     }
 }

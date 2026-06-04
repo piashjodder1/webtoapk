@@ -58,6 +58,22 @@ class AppForm
                                     ->label('Splash Screen'),
                             ]),
 
+                        Section::make('App Version')
+                            ->columnSpan(3)
+                            ->columns(4)
+                            ->schema([
+                                TextInput::make('version_name')
+                                    ->label('Version Name')
+                                    ->placeholder('1.0.0')
+                                    ->helperText('Human-readable version (e.g. 1.0.0, 2.5.1)'),
+
+                                TextInput::make('version_code')
+                                    ->label('Version Code')
+                                    ->placeholder('1')
+                                    ->numeric()
+                                    ->helperText('Numeric version for Play Store (increment with each release)'),
+                            ]),
+
                         Section::make('Features')
                             ->columnSpan(3)
                             ->schema([
@@ -72,18 +88,16 @@ class AppForm
                                         Toggle::make('enable_push_notification')
                                             ->label('Push Notification (OneSignal)')
                                             ->reactive(),
-
                                     ]),
 
                                 TextInput::make('onesignal_app_id')
                                     ->label('OneSignal App ID')
                                     ->placeholder('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
-                                    ->helperText('Required if Push Notification is enabled. Get from OneSignal Dashboard > App Settings > Keys & IDs.')
+                                    ->helperText('Required if Push Notification is enabled.')
                                     ->required(fn ($get) => $get('enable_push_notification'))
                                     ->hidden(fn ($get) => !$get('enable_push_notification')),
-
-                            ])
-                    ])
+                            ]),
+                    ]),
             ]);
     }
 }

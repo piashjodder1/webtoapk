@@ -40,6 +40,14 @@ on:
         description: 'OneSignal App ID'
         required: false
         default: ''
+      version_name:
+        description: 'Android Version Name'
+        required: false
+        default: '1.0.0'
+      version_code:
+        description: 'Android Version Code'
+        required: false
+        default: '1'
 
       build_type:
         description: 'Build Format (apk, aab, both)'
@@ -103,7 +111,9 @@ jobs:
             "enable_pull_refresh": ${{ github.event.inputs.enable_pull_refresh }},
             "enable_offline_page": ${{ github.event.inputs.enable_offline_page }},
             "enable_push_notification": ${{ github.event.inputs.enable_push_notification }},
-            "onesignal_app_id": "${{ github.event.inputs.onesignal_app_id }}"
+            "onesignal_app_id": "${{ github.event.inputs.onesignal_app_id }}",
+            "version_name": "${{ github.event.inputs.version_name }}",
+            "version_code": ${{ github.event.inputs.version_code }}
           }
           EOF
           echo "config.json written:"
@@ -123,6 +133,8 @@ jobs:
           icon_url = "${{ github.event.inputs.icon_url }}"
           app_name = "${{ github.event.inputs.app_name }}"
           package_name = "${{ github.event.inputs.package_name }}"
+          version_name = "${{ github.event.inputs.version_name }}"
+          version_code = "${{ github.event.inputs.version_code }}"
 
           # ── 1. Icon Download and Resizing ──
           if icon_url:
@@ -172,14 +184,17 @@ jobs:
               open(strings_path, 'w').write(c)
               print(f"strings.xml app_name updated → {app_name}")
 
-          # ── 3. Gradle Package Name Edit ──
-          # Update applicationId in build.gradle.kts
+          # ── 3. Gradle Package Name & Version Edit ──
           gradle_path = "android-template/app/build.gradle.kts"
           if os.path.exists(gradle_path):
               c = open(gradle_path).read()
               c = re.sub(r'applicationId\s*=\s*"[^"]+"', f'applicationId = "{package_name}"', c)
+              c = re.sub(r'versionName\s*=\s*"[^"]+"', f'versionName = "{version_name}"', c)
+              c = re.sub(r'versionCode\s*=\s*\d+', f'versionCode = {version_code}', c)
               open(gradle_path, 'w').write(c)
               print(f"Gradle applicationId updated → {package_name}")
+              print(f"Gradle versionName updated → {version_name}")
+              print(f"Gradle versionCode updated → {version_code}")
           EOF
 
       # ── Set up JDK 17 & Gradle ──────────────────────────────────────────

@@ -23,6 +23,8 @@ class App extends Model
         'enable_offline_page',
         'enable_push_notification',
         'onesignal_app_id',
+        'version_name',
+        'version_code',
         'apk_url',
         'aab_url',
         'build_status',

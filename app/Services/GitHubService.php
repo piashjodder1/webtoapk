@@ -61,6 +61,8 @@ class GitHubService
             'enable_offline_page' => $app->enable_offline_page ? 'true' : 'false',
             'enable_push_notification' => $app->enable_push_notification ? 'true' : 'false',
             'onesignal_app_id' => $app->onesignal_app_id ?? '',
+            'version_name' => $app->version_name ?? '1.0.0',
+            'version_code' => (string) ($app->version_code ?? 1),
 
             'build_type' => $build->build_type,
             'callback_url' => route('api.build-callback'),
