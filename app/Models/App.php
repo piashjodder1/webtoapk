@@ -40,6 +40,19 @@ class App extends Model
     ];
 
     /**
+     * The "booted" method of the model.
+     */
+    protected static function booted()
+    {
+        static::deleting(function ($app) {
+            $storageService = new \App\Services\StorageService();
+            // Delete all builds and files associated with this app
+            $storageService->deleteDirectory($app->package_name);
+            $storageService->deleteDirectory(\Illuminate\Support\Str::slug($app->package_name));
+        });
+    }
+
+    /**
      * Get the user that owns the app.
      */
     public function user(): BelongsTo

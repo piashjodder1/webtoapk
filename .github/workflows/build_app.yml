@@ -62,6 +62,25 @@ on:
       callback_token:
         description: 'Callback Authentication Token'
         required: true
+      r2_key:
+        description: 'Cloudflare R2 Access Key'
+        required: false
+      r2_secret:
+        description: 'Cloudflare R2 Secret Key'
+        required: false
+      r2_bucket:
+        description: 'Cloudflare R2 Bucket'
+        required: false
+      r2_endpoint:
+        description: 'Cloudflare R2 Endpoint'
+        required: false
+      r2_public_url:
+        description: 'Cloudflare R2 Public URL'
+        required: false
+      storage_driver:
+        description: 'Active Storage Driver'
+        required: false
+        default: 'local'
 
 jobs:
   build:
@@ -238,21 +257,50 @@ jobs:
 
       - name: Dispatch Completed Status with Files
         if: success()
+        env:
+          AWS_ACCESS_KEY_ID: ${{ github.event.inputs.r2_key }}
+          AWS_SECRET_ACCESS_KEY: ${{ github.event.inputs.r2_secret }}
+          AWS_DEFAULT_REGION: auto
         run: |
           APK_URL=""
           AAB_URL=""
           
+          PKG_NAME="${{ github.event.inputs.package_name }}"
+          BUILD_ID="${{ github.event.inputs.build_id }}"
+          
           if [ -f "flutter-template/build/app/outputs/flutter-apk/app-release.apk" ]; then
-            echo "Uploading APK to uguu.se..."
-            RESPONSE=$(curl -s -F "files[]=@flutter-template/build/app/outputs/flutter-apk/app-release.apk" https://uguu.se/upload.php)
-            APK_URL=$(echo "$RESPONSE" | jq -r '.files[0].url')
+            if [ -n "${{ github.event.inputs.r2_key }}" ]; then
+              echo "Uploading APK to Cloudflare R2..."
+              aws s3 cp flutter-template/build/app/outputs/flutter-apk/app-release.apk \
+                "s3://${{ github.event.inputs.r2_bucket }}/${PKG_NAME}/builds/apk/app-release-${BUILD_ID}.apk" \
+                --endpoint-url "${{ github.event.inputs.r2_endpoint }}"
+              
+              PUBLIC_URL="${{ github.event.inputs.r2_public_url }}"
+              PUBLIC_URL="${PUBLIC_URL%/}"
+              APK_URL="${PUBLIC_URL}/${PKG_NAME}/builds/apk/app-release-${BUILD_ID}.apk"
+            else
+              echo "R2 credentials not set. Uploading APK to uguu.se..."
+              RESPONSE=$(curl -s -F "files[]=@flutter-template/build/app/outputs/flutter-apk/app-release.apk" https://uguu.se/upload.php)
+              APK_URL=$(echo "$RESPONSE" | jq -r '.files[0].url')
+            fi
             echo "APK URL: $APK_URL"
           fi
           
           if [ -f "flutter-template/build/app/outputs/bundle/release/app-release.aab" ]; then
-            echo "Uploading AAB to uguu.se..."
-            RESPONSE=$(curl -s -F "files[]=@flutter-template/build/app/outputs/bundle/release/app-release.aab" https://uguu.se/upload.php)
-            AAB_URL=$(echo "$RESPONSE" | jq -r '.files[0].url')
+            if [ -n "${{ github.event.inputs.r2_key }}" ]; then
+              echo "Uploading AAB to Cloudflare R2..."
+              aws s3 cp flutter-template/build/app/outputs/bundle/release/app-release.aab \
+                "s3://${{ github.event.inputs.r2_bucket }}/${PKG_NAME}/builds/aab/app-release-${BUILD_ID}.aab" \
+                --endpoint-url "${{ github.event.inputs.r2_endpoint }}"
+              
+              PUBLIC_URL="${{ github.event.inputs.r2_public_url }}"
+              PUBLIC_URL="${PUBLIC_URL%/}"
+              AAB_URL="${PUBLIC_URL}/${PKG_NAME}/builds/aab/app-release-${BUILD_ID}.aab"
+            else
+              echo "R2 credentials not set. Uploading AAB to uguu.se..."
+              RESPONSE=$(curl -s -F "files[]=@flutter-template/build/app/outputs/bundle/release/app-release.aab" https://uguu.se/upload.php)
+              AAB_URL=$(echo "$RESPONSE" | jq -r '.files[0].url')
+            fi
             echo "AAB URL: $AAB_URL"
           fi
           

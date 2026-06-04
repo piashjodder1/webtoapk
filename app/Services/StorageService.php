@@ -16,22 +16,6 @@ class StorageService
     {
         $driver = Setting::get('storage_driver', 'local');
 
-        if ($driver === 's3') {
-            config([
-                'filesystems.disks.s3_dynamic' => [
-                    'driver' => 's3',
-                    'key' => Setting::get('s3_key'),
-                    'secret' => Setting::get('s3_secret'),
-                    'region' => Setting::get('s3_region', 'us-east-1'),
-                    'bucket' => Setting::get('s3_bucket'),
-                    'url' => env('AWS_URL'),
-                    'endpoint' => env('AWS_ENDPOINT'),
-                    'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-                ]
-            ]);
-            return Storage::disk('s3_dynamic');
-        }
-
         if ($driver === 'r2') {
             config([
                 'filesystems.disks.r2_dynamic' => [
@@ -87,6 +71,13 @@ class StorageService
             return Storage::disk('public')->url($path);
         }
 
+        if ($driver === 'r2') {
+            $publicUrl = Setting::get('r2_public_url');
+            if ($publicUrl) {
+                return rtrim($publicUrl, '/') . '/' . ltrim($path, '/');
+            }
+        }
+
         return $this->getDisk()->url($path);
     }
 
@@ -96,5 +87,13 @@ class StorageService
     public function delete(string $path): bool
     {
         return $this->getDisk()->delete($path);
+    }
+
+    /**
+     * Delete a directory.
+     */
+    public function deleteDirectory(string $directory): bool
+    {
+        return $this->getDisk()->deleteDirectory($directory);
     }
 }

@@ -36,14 +36,11 @@ class Settings extends Page implements HasForms
             'github_workflow_id',
             'build_callback_token',
             'storage_driver',
-            's3_key',
-            's3_secret',
-            's3_bucket',
-            's3_region',
             'r2_key',
             'r2_secret',
             'r2_bucket',
-            'r2_endpoint'
+            'r2_endpoint',
+            'r2_public_url'
         ];
 
         $state = [];
@@ -105,29 +102,12 @@ class Settings extends Page implements HasForms
                                             ->label('Active Storage Disk')
                                             ->options([
                                                 'local' => 'Local Disk (public/storage)',
-                                                's3' => 'Amazon S3',
                                                 'r2' => 'Cloudflare R2',
                                             ])
                                             ->default('local')
                                             ->required()
                                             ->reactive()
                                             ->columnSpan(2),
-
-                                        // Amazon S3 fields
-                                        TextInput::make('s3_key')
-                                            ->label('AWS S3 Access Key ID')
-                                            ->visible(fn ($get) => $get('storage_driver') === 's3'),
-                                        TextInput::make('s3_secret')
-                                            ->label('AWS S3 Secret Access Key')
-                                            ->password()
-                                            ->visible(fn ($get) => $get('storage_driver') === 's3'),
-                                        TextInput::make('s3_bucket')
-                                            ->label('AWS S3 Bucket Name')
-                                            ->visible(fn ($get) => $get('storage_driver') === 's3'),
-                                        TextInput::make('s3_region')
-                                            ->label('AWS S3 Region')
-                                            ->placeholder('us-east-1')
-                                            ->visible(fn ($get) => $get('storage_driver') === 's3'),
 
                                         // Cloudflare R2 fields
                                         TextInput::make('r2_key')
@@ -144,6 +124,11 @@ class Settings extends Page implements HasForms
                                             ->label('Cloudflare R2 Endpoint URL')
                                             ->placeholder('https://xxxxxx.r2.cloudflarestorage.com')
                                             ->visible(fn ($get) => $get('storage_driver') === 'r2'),
+                                        TextInput::make('r2_public_url')
+                                            ->label('Cloudflare R2 Public URL / Custom Domain')
+                                            ->placeholder('https://pub-xxxxxx.r2.dev or https://download.myapp.com')
+                                            ->visible(fn ($get) => $get('storage_driver') === 'r2')
+                                            ->columnSpan(2),
                                     ]),
                             ]),
                     ])
@@ -161,7 +146,7 @@ class Settings extends Page implements HasForms
             $group = 'general';
             if (str_starts_with($key, 'github_')) {
                 $group = 'github';
-            } elseif (in_array($key, ['storage_driver', 's3_key', 's3_secret', 's3_bucket', 's3_region', 'r2_key', 'r2_secret', 'r2_bucket', 'r2_endpoint'])) {
+            } elseif (in_array($key, ['storage_driver', 'r2_key', 'r2_secret', 'r2_bucket', 'r2_endpoint', 'r2_public_url'])) {
                 $group = 'storage';
             }
 

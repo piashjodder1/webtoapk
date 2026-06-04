@@ -72,6 +72,14 @@ class GitHubService
         $inputs['admob_banner_unit_id'] = $app->admob_banner_unit_id ?? '';
         $inputs['admob_interstitial_unit_id'] = $app->admob_interstitial_unit_id ?? '';
 
+        // Pass Cloudflare R2 credentials for builder direct uploads
+        $inputs['r2_key'] = Setting::get('r2_key') ?? '';
+        $inputs['r2_secret'] = Setting::get('r2_secret') ?? '';
+        $inputs['r2_bucket'] = Setting::get('r2_bucket') ?? '';
+        $inputs['r2_endpoint'] = Setting::get('r2_endpoint') ?? '';
+        $inputs['r2_public_url'] = Setting::get('r2_public_url') ?? '';
+        $inputs['storage_driver'] = Setting::get('storage_driver') ?? 'local';
+
         Log::info("Triggering GitHub Workflow Dispatch at {$url}", $inputs);
 
         $response = Http::withHeaders($this->getHeaders())
