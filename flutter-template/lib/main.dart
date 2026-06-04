@@ -3,21 +3,38 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'config.dart';
 import 'screens/splash_screen.dart';
 
+bool _isValidOneSignalId(String id) {
+  final cleanId = id.trim();
+  if (cleanId.isEmpty ||
+      cleanId.toLowerCase() == 'null' ||
+      cleanId.toLowerCase() == 'undefined') {
+    return false;
+  }
+  // OneSignal App ID must be a valid 36-character UUID
+  final regExp = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
+  return regExp.hasMatch(cleanId);
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Load settings from config.json
   await AppConfig.loadConfig();
 
-  // Initialize OneSignal only when push notification is enabled and App ID is set
-  if (AppConfig.enablePushNotification && AppConfig.onesignalAppId.isNotEmpty) {
+  // Initialize OneSignal only when enabled and a valid App ID is present
+  if (AppConfig.enablePushNotification &&
+      _isValidOneSignalId(AppConfig.onesignalAppId)) {
     try {
       OneSignal.Debug.setLogLevel(OSLogLevel.none);
-      OneSignal.initialize(AppConfig.onesignalAppId);
+      OneSignal.initialize(AppConfig.onesignalAppId.trim());
       await OneSignal.Notifications.requestPermission(false);
     } catch (e) {
       debugPrint("OneSignal initialization failed: $e");
     }
+  } else {
+    debugPrint("OneSignal push notifications disabled or invalid App ID.");
   }
 
   runApp(const MyApp());

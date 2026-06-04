@@ -108,8 +108,21 @@ class _WebViewScreenState extends State<WebViewScreen> {
         ),
       );
 
-    // Load the website URL after controller is ready
-    _controller.loadRequest(Uri.parse(AppConfig.websiteUrl));
+    // Safely validate and load the target website URL
+    final String targetUrl = AppConfig.websiteUrl.trim();
+    final Uri? parsedUri = Uri.tryParse(targetUrl);
+
+    if (parsedUri != null &&
+        parsedUri.hasAbsolutePath &&
+        (parsedUri.isScheme('http') || parsedUri.isScheme('https'))) {
+      _controller.loadRequest(parsedUri);
+    } else {
+      debugPrint('Error: Invalid Website URL "$targetUrl". Displaying offline page.');
+      if (mounted) {
+        setState(() => _isOffline = true);
+      }
+      _loadOfflinePage();
+    }
   }
 
   // Load offline.html locally
