@@ -102,11 +102,13 @@ jobs:
             }'
 
       - name: Set up Java Development Kit (JDK)
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          cache: 'gradle'
+
+      - name: Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Cache Pub Dependencies
         uses: actions/cache@v4
@@ -159,23 +161,49 @@ jobs:
           }
           EOF
 
-      - name: Download Launcher Icon
+      - name: Download and Replace Launcher Icons (Instant Generation)
         if: ${{ github.event.inputs.icon_url != '' }}
         run: |
-          curl -L -o flutter-template/assets/logo.png "${{ github.event.inputs.icon_url }}"
+          python3 -m pip install Pillow requests
+          python3 - <<EOF
+          import os
+          import requests
+          from PIL import Image
 
-      - name: Setup Launcher Icons Config
-        if: ${{ github.event.inputs.icon_url != '' }}
-        run: |
-          cat <<EOF > flutter-template/flutter_launcher_icons.yaml
-          flutter_launcher_icons:
-            android: "launcher_icon"
-            image_path: "assets/logo.png"
-            min_sdk_android: 21
+          icon_url = "${{ github.event.inputs.icon_url }}"
+          logo_path = "flutter-template/assets/logo.png"
+
+          print(f"Downloading icon from {icon_url}...")
+          response = requests.get(icon_url)
+          if response.status_code == 200:
+              os.makedirs(os.path.dirname(logo_path), exist_ok=True)
+              with open(logo_path, 'wb') as f:
+                  f.write(response.content)
+              print("Icon downloaded successfully to assets/logo.png.")
+              
+              sizes = {
+                  "mipmap-mdpi": (48, 48),
+                  "mipmap-hdpi": (72, 72),
+                  "mipmap-xhdpi": (96, 96),
+                  "mipmap-xxhdpi": (144, 144),
+                  "mipmap-xxxhdpi": (192, 192)
+              }
+              
+              try:
+                  with Image.open(logo_path) as img:
+                      for folder, size in sizes.items():
+                          res_path = f"flutter-template/android/app/src/main/res/{folder}/ic_launcher.png"
+                          os.makedirs(os.path.dirname(res_path), exist_ok=True)
+                          resized_img = img.convert("RGBA").resize(size, Image.Resampling.LANCZOS if hasattr(Image, 'Resampling') else Image.ANTIALIAS)
+                          resized_img.save(res_path, "PNG")
+                          print(f"Generated {res_path} with size {size}")
+              except Exception as e:
+                  print(f"Error processing image: {e}")
+                  exit(1)
+          else:
+              print(f"Failed to download icon, status code: {response.status_code}")
+              exit(1)
           EOF
-          cd flutter-template
-          flutter pub add flutter_launcher_icons --dev
-          flutter pub run flutter_launcher_icons:main
 
       - name: Replace Package Name and App Label
         run: |
@@ -234,13 +262,13 @@ jobs:
         if: ${{ github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == 'both' }}
         run: |
           cd flutter-template
-          flutter build apk --release > ../build_output.log 2>&1
+          flutter build apk --release --no-pub > ../build_output.log 2>&1
 
       - name: Build AAB (Release)
         if: ${{ github.event.inputs.build_type == 'aab' || github.event.inputs.build_type == 'both' }}
         run: |
           cd flutter-template
-          flutter build appbundle --release >> ../build_output.log 2>&1
+          flutter build appbundle --release --no-pub >> ../build_output.log 2>&1
 
       - name: Send Uploading Callback
         if: success()
@@ -271,13 +299,18 @@ jobs:
           if [ -f "flutter-template/build/app/outputs/flutter-apk/app-release.apk" ]; then
             if [ -n "${{ github.event.inputs.r2_key }}" ]; then
               echo "Uploading APK to Cloudflare R2..."
-              aws s3 cp flutter-template/build/app/outputs/flutter-apk/app-release.apk \
+              if aws s3 cp flutter-template/build/app/outputs/flutter-apk/app-release.apk \
                 "s3://${{ github.event.inputs.r2_bucket }}/${PKG_NAME}/builds/apk/app-release-${BUILD_ID}.apk" \
-                --endpoint-url "${{ github.event.inputs.r2_endpoint }}"
-              
-              PUBLIC_URL="${{ github.event.inputs.r2_public_url }}"
-              PUBLIC_URL="${PUBLIC_URL%/}"
-              APK_URL="${PUBLIC_URL}/${PKG_NAME}/builds/apk/app-release-${BUILD_ID}.apk"
+                --endpoint-url "${{ github.event.inputs.r2_endpoint }}"; then
+                
+                PUBLIC_URL="${{ github.event.inputs.r2_public_url }}"
+                PUBLIC_URL="${PUBLIC_URL%/}"
+                APK_URL="${PUBLIC_URL}/${PKG_NAME}/builds/apk/app-release-${BUILD_ID}.apk"
+              else
+                echo "R2 upload failed. Falling back to uguu.se..."
+                RESPONSE=$(curl -s -F "files[]=@flutter-template/build/app/outputs/flutter-apk/app-release.apk" https://uguu.se/upload.php)
+                APK_URL=$(echo "$RESPONSE" | jq -r '.files[0].url')
+              fi
             else
               echo "R2 credentials not set. Uploading APK to uguu.se..."
               RESPONSE=$(curl -s -F "files[]=@flutter-template/build/app/outputs/flutter-apk/app-release.apk" https://uguu.se/upload.php)
@@ -289,16 +322,21 @@ jobs:
           if [ -f "flutter-template/build/app/outputs/bundle/release/app-release.aab" ]; then
             if [ -n "${{ github.event.inputs.r2_key }}" ]; then
               echo "Uploading AAB to Cloudflare R2..."
-              aws s3 cp flutter-template/build/app/outputs/bundle/release/app-release.aab \
+              if aws s3 cp flutter-template/build/app/outputs/bundle/release/app-release.aab \
                 "s3://${{ github.event.inputs.r2_bucket }}/${PKG_NAME}/builds/aab/app-release-${BUILD_ID}.aab" \
-                --endpoint-url "${{ github.event.inputs.r2_endpoint }}"
-              
-              PUBLIC_URL="${{ github.event.inputs.r2_public_url }}"
-              PUBLIC_URL="${PUBLIC_URL%/}"
-              AAB_URL="${PUBLIC_URL}/${PKG_NAME}/builds/aab/app-release-${BUILD_ID}.aab"
+                --endpoint-url "${{ github.event.inputs.r2_endpoint }}"; then
+                
+                PUBLIC_URL="${{ github.event.inputs.r2_public_url }}"
+                PUBLIC_URL="${PUBLIC_URL%/}"
+                AAB_URL="${PUBLIC_URL}/${PKG_NAME}/builds/aab/app-release-${BUILD_ID}.aab"
+              else
+                echo "R2 upload failed. Falling back to uguu.se..."
+                RESPONSE=$(curl -s -F "files[]=@flutter-template/bundle/release/app-release.aab" https://uguu.se/upload.php)
+                AAB_URL=$(echo "$RESPONSE" | jq -r '.files[0].url')
+              fi
             else
               echo "R2 credentials not set. Uploading AAB to uguu.se..."
-              RESPONSE=$(curl -s -F "files[]=@flutter-template/build/app/outputs/bundle/release/app-release.aab" https://uguu.se/upload.php)
+              RESPONSE=$(curl -s -F "files[]=@flutter-template/bundle/release/app-release.aab" https://uguu.se/upload.php)
               AAB_URL=$(echo "$RESPONSE" | jq -r '.files[0].url')
             fi
             echo "AAB URL: $AAB_URL"

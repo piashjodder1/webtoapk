@@ -49,6 +49,7 @@ class App extends Model
             // Delete all builds and files associated with this app
             $storageService->deleteDirectory($app->package_name);
             $storageService->deleteDirectory(\Illuminate\Support\Str::slug($app->package_name));
+            $storageService->deleteDirectory('apps/' . \Illuminate\Support\Str::slug($app->package_name));
         });
     }
 
