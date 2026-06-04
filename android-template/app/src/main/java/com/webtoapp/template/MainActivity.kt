@@ -13,6 +13,8 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
+    private lateinit var offlineView: LinearLayout
+    private lateinit var retryButton: Button
 
     private var isOffline = false
     private var isPageLoading = false
@@ -36,6 +40,16 @@ class MainActivity : AppCompatActivity() {
         webView = findViewById(R.id.webview)
         swipeRefresh = findViewById(R.id.swipe_refresh)
         progressBar = findViewById(R.id.loading_progress)
+        offlineView = findViewById(R.id.offline_view)
+        retryButton = findViewById(R.id.retry_button)
+
+        // Retry button reloads the website
+        retryButton.setOnClickListener {
+            if (isNetworkAvailable()) {
+                hideOffline()
+                webView.loadUrl(AppConfig.websiteUrl)
+            }
+        }
 
         // Pull to Refresh configuration
         swipeRefresh.isEnabled = AppConfig.enablePullRefresh
@@ -146,7 +160,7 @@ class MainActivity : AppCompatActivity() {
                 super.onAvailable(network)
                 runOnUiThread {
                     if (isOffline) {
-                        isOffline = false
+                        hideOffline()
                         webView.loadUrl(AppConfig.websiteUrl)
                     }
                 }
@@ -168,8 +182,17 @@ class MainActivity : AppCompatActivity() {
         isOffline = true
         swipeRefresh.isRefreshing = false
         if (AppConfig.enableOfflinePage) {
-            webView.loadUrl("file:///android_asset/offline.html")
+            webView.visibility = View.GONE
+            swipeRefresh.visibility = View.GONE
+            offlineView.visibility = View.VISIBLE
         }
+    }
+
+    private fun hideOffline() {
+        isOffline = false
+        offlineView.visibility = View.GONE
+        webView.visibility = View.VISIBLE
+        swipeRefresh.visibility = View.VISIBLE
     }
 
     override fun onDestroy() {
