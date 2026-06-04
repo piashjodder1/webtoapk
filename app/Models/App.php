@@ -21,22 +21,15 @@ class App extends Model
         'splash_path',
         'enable_pull_refresh',
         'enable_offline_page',
-        'enable_push_notification',
-        'enable_admob',
         'apk_url',
         'aab_url',
         'build_status',
-        'onesignal_app_id',
-        'admob_app_id',
-        'admob_banner_unit_id',
-        'admob_interstitial_unit_id',
     ];
 
     protected $casts = [
         'enable_pull_refresh' => 'boolean',
         'enable_offline_page' => 'boolean',
-        'enable_push_notification' => 'boolean',
-        'enable_admob' => 'boolean',
+
     ];
 
     /**

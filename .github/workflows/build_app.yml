@@ -32,26 +32,7 @@ on:
         description: 'Enable Offline Page (true/false)'
         required: true
         default: 'false'
-      enable_push_notification:
-        description: 'Enable Push Notifications (true/false)'
-        required: true
-        default: 'false'
-      onesignal_app_id:
-        description: 'OneSignal App ID'
-        required: false
-      enable_admob:
-        description: 'Enable Google AdMob (true/false)'
-        required: true
-        default: 'false'
-      admob_app_id:
-        description: 'AdMob App ID'
-        required: false
-      admob_banner_unit_id:
-        description: 'AdMob Banner Unit ID'
-        required: false
-      admob_interstitial_unit_id:
-        description: 'AdMob Interstitial Unit ID'
-        required: false
+
       build_type:
         description: 'Build Format (apk, aab, both)'
         required: true
@@ -129,13 +110,8 @@ jobs:
             "website_url": "${{ github.event.inputs.website_url }}",
             "package_name": "${{ github.event.inputs.package_name }}",
             "enable_pull_refresh": ${{ github.event.inputs.enable_pull_refresh }},
-            "enable_offline_page": ${{ github.event.inputs.enable_offline_page }},
-            "enable_push_notification": ${{ github.event.inputs.enable_push_notification }},
-            "onesignal_app_id": "${{ github.event.inputs.onesignal_app_id }}",
-            "enable_admob": ${{ github.event.inputs.enable_admob }},
-            "admob_app_id": "${{ github.event.inputs.admob_app_id }}",
-            "admob_banner_unit_id": "${{ github.event.inputs.admob_banner_unit_id }}",
-            "admob_interstitial_unit_id": "${{ github.event.inputs.admob_interstitial_unit_id }}"
+            "enable_offline_page": ${{ github.event.inputs.enable_offline_page }}
+
           }
           EOF
           echo "config.json written:"

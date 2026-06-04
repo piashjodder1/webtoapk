@@ -44,10 +44,7 @@ class DatabaseSeeder extends Seeder
             ['key' => 'firebase_server_key', 'value' => '', 'group' => 'firebase'],
             ['key' => 'firebase_api_key', 'value' => '', 'group' => 'firebase'],
 
-            // AdMob Settings
-            ['key' => 'admob_app_id_android', 'value' => '', 'group' => 'admob'],
-            ['key' => 'admob_banner_unit_id', 'value' => '', 'group' => 'admob'],
-            ['key' => 'admob_interstitial_unit_id', 'value' => '', 'group' => 'admob'],
+
 
             // Storage Settings
             ['key' => 'storage_driver', 'value' => 'local', 'group' => 'storage'], // local, s3, r2

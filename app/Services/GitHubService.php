@@ -59,18 +59,13 @@ class GitHubService
             'splash_url' => $splashUrl,
             'enable_pull_refresh' => $app->enable_pull_refresh ? 'true' : 'false',
             'enable_offline_page' => $app->enable_offline_page ? 'true' : 'false',
-            'enable_push_notification' => $app->enable_push_notification ? 'true' : 'false',
-            'onesignal_app_id' => $app->onesignal_app_id ?? '',
-            'enable_admob' => $app->enable_admob ? 'true' : 'false',
+
             'build_type' => $build->build_type,
             'callback_url' => route('api.build-callback'),
             'callback_token' => Setting::get('build_callback_token', 'default_callback_secret_token_123'),
         ];
 
-        // Pass app-specific AdMob settings
-        $inputs['admob_app_id'] = $app->admob_app_id ?? '';
-        $inputs['admob_banner_unit_id'] = $app->admob_banner_unit_id ?? '';
-        $inputs['admob_interstitial_unit_id'] = $app->admob_interstitial_unit_id ?? '';
+
 
         // Pass Cloudflare R2 credentials for builder direct uploads
         $inputs['r2_key'] = Setting::get('r2_key') ?? '';
