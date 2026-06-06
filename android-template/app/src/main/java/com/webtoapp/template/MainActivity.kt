@@ -121,13 +121,34 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
-                if (AppConfig.enableExternalLinksInBrowser) {
-                    val appHost = android.net.Uri.parse(AppConfig.websiteUrl).host
-                    val reqHost = android.net.Uri.parse(url).host
-                    if (appHost != null && reqHost != null && !reqHost.contains(appHost)) {
-                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
-                        startActivity(intent)
+                val uri = android.net.Uri.parse(url)
+                val scheme = uri.scheme
+
+                if (scheme == "http" || scheme == "https") {
+                    if (AppConfig.enableExternalLinksInBrowser) {
+                        val appHost = android.net.Uri.parse(AppConfig.websiteUrl).host?.removePrefix("www.")
+                        val reqHost = uri.host?.removePrefix("www.")
+
+                        if (appHost != null && reqHost != null) {
+                            if (!reqHost.contains(appHost) && !appHost.contains(reqHost)) {
+                                try {
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
+                                    this@MainActivity.startActivity(intent)
+                                    return true
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                    }
+                    return false
+                } else {
+                    try {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
+                        this@MainActivity.startActivity(intent)
                         return true
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
                 return super.shouldOverrideUrlLoading(view, request)
