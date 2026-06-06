@@ -50,13 +50,13 @@ class AppForm
                 ->columns(2)
                 ->schema([
                     FileUpload::make('icon_path')
-                        ->image()
+                        ->extraAttributes(['accept' => 'image/*'])
                         ->disk('public')
                         ->directory('icons')
                         ->label('App Icon'),
 
                     FileUpload::make('splash_path')
-                        ->image()
+                        ->extraAttributes(['accept' => 'image/*'])
                         ->disk('public')
                         ->directory('splashes')
                         ->label('Splash Screen'),
@@ -117,7 +117,7 @@ class AppForm
                             
                             FileUpload::make('header_logo')
                                 ->label('Header Logo')
-                                ->image()
+                                ->extraAttributes(['accept' => 'image/*'])
                                 ->disk('public')
                                 ->directory('headers')
                                 ->helperText('Upload a logo to show in the app header')
