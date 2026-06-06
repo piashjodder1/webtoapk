@@ -12,7 +12,7 @@
 <meta property="og:title" content="{{ \App\Models\Setting::get('og_title', \App\Models\Setting::get('seo_title', 'Website Title')) }}">
 <meta property="og:description" content="{{ \App\Models\Setting::get('og_description', \App\Models\Setting::get('seo_description', 'Website Description')) }}">
 @if(\App\Models\Setting::get('og_image'))
-<meta property="og:image" content="{{ Storage::url(\App\Models\Setting::get('og_image')) }}">
+<meta property="og:image" content="{{ Storage::disk('public')->url(\App\Models\Setting::get('og_image')) }}">
 @else
 <meta property="og:image" content="{{ asset('image.jpg') }}">
 @endif
@@ -24,14 +24,14 @@
 <meta name="twitter:title" content="{{ \App\Models\Setting::get('twitter_title', \App\Models\Setting::get('seo_title', 'Website Title')) }}">
 <meta name="twitter:description" content="{{ \App\Models\Setting::get('twitter_description', \App\Models\Setting::get('seo_description', 'Website Description')) }}">
 @if(\App\Models\Setting::get('twitter_image'))
-<meta name="twitter:image" content="{{ Storage::url(\App\Models\Setting::get('twitter_image')) }}">
+<meta name="twitter:image" content="{{ Storage::disk('public')->url(\App\Models\Setting::get('twitter_image')) }}">
 @else
 <meta name="twitter:image" content="{{ asset('image.jpg') }}">
 @endif
 
 <!-- Favicon -->
 @if(\App\Models\Setting::get('favicon'))
-<link rel="icon" href="{{ Storage::url(\App\Models\Setting::get('favicon')) }}">
+<link rel="icon" href="{{ Storage::disk('public')->url(\App\Models\Setting::get('favicon')) }}">
 @else
 <link rel="icon" href="/favicon.ico">
 @endif

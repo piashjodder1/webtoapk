@@ -22,7 +22,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [AuthController::class, 'reset'])->name('password.update');
 });
 
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::any('/logout', [AuthController::class, 'logout'])->name('logout');
 
 
 

@@ -4,7 +4,7 @@
   <div class="nav-inner">
     <a href="/" class="logo">
       @if(\App\Models\Setting::get('site_logo'))
-          <img src="{{ Storage::url(\App\Models\Setting::get('site_logo')) }}" alt="Site Logo" style="height: 34px;">
+          <img src="{{ Storage::disk('public')->url(\App\Models\Setting::get('site_logo')) }}" alt="Site Logo" style="height: 34px;">
       @else
           <div class="logo-icon">W</div>
           {{ config('app.name', 'WebToApp') }}

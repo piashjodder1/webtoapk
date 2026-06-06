@@ -100,12 +100,14 @@ class Settings extends Page implements HasForms
                                         FileUpload::make('site_logo')
                                             ->label('Site/Header Logo')
                                             ->image()
+                                            ->disk('public')
                                             ->directory('settings/logos')
                                             ->helperText('Upload the main logo for the website header.'),
                                         
                                         FileUpload::make('favicon')
                                             ->label('Favicon')
                                             ->image()
+                                            ->disk('public')
                                             ->directory('settings/favicons')
                                             ->helperText('Upload the favicon (e.g. .ico or .png).'),
                                     ])->columns(2),
@@ -127,7 +129,7 @@ class Settings extends Page implements HasForms
                                         TextInput::make('og_description')->label('OG Description'),
                                         TextInput::make('og_type')->label('OG Type')->default('website'),
                                         TextInput::make('og_url')->label('OG URL'),
-                                        FileUpload::make('og_image')->label('OG Image')->image()->directory('settings/og'),
+                                        FileUpload::make('og_image')->label('OG Image')->image()->disk('public')->directory('settings/og'),
                                     ])->columns(2),
 
                                 Section::make('Twitter/X Card')
@@ -135,7 +137,7 @@ class Settings extends Page implements HasForms
                                         TextInput::make('twitter_card')->label('Twitter Card Type')->default('summary_large_image'),
                                         TextInput::make('twitter_title')->label('Twitter Title'),
                                         TextInput::make('twitter_description')->label('Twitter Description'),
-                                        FileUpload::make('twitter_image')->label('Twitter Image')->image()->directory('settings/twitter'),
+                                        FileUpload::make('twitter_image')->label('Twitter Image')->image()->disk('public')->directory('settings/twitter'),
                                     ])->columns(2),
 
                                 Section::make('Verifications')

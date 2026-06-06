@@ -11,6 +11,8 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use Filament\Navigation\MenuItem;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -25,15 +27,18 @@ class UserPanelProvider extends PanelProvider
         return $panel
             ->id('user')
             ->path('userdashboard')
-            ->login()
-            ->registration()
-            ->passwordReset()
-            ->emailVerification()
             ->profile(isSimple: false)
             ->colors([
                 'primary' => '#3B30E8',
             ])
-            ->brandLogo(fn () => \App\Models\Setting::get('site_logo') ? asset('storage/' . \App\Models\Setting::get('site_logo')) : null)
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Log out')
+                    ->url(fn (): string => route('logout'))
+                    ->icon('heroicon-o-arrow-left-on-rectangle'),
+            ])
+            ->brandLogo(fn () => \App\Models\Setting::get('site_logo') ? Storage::disk('public')->url(\App\Models\Setting::get('site_logo')) : null)
+            ->favicon(fn () => \App\Models\Setting::get('favicon') ? Storage::disk('public')->url(\App\Models\Setting::get('favicon')) : null)
             ->brandName(fn () => config('app.name', 'WebToApp'))
             ->brandLogoHeight('2rem')
             ->darkMode(false)
