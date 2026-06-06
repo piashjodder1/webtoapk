@@ -32,6 +32,7 @@ jobs:
             -d "{
               \"build_id\": \"$BUILD_ID\",
               \"status\": \"building\",
+              \"append_log\": true,
               \"github_run_id\": \"${{ github.run_id }}\",
               \"build_log\": \"[1/4] Setting up build environment...\",
               \"token\": \"$CALLBACK_TOKEN\"
@@ -174,6 +175,7 @@ jobs:
             -d "{
               \"build_id\": \"$BUILD_ID\",
               \"status\": \"building\",
+              \"append_log\": true,
               \"github_run_id\": \"${{ github.run_id }}\",
               \"build_log\": \"[1/4] Environment ready.\n[2/4] App config, icon, and package identity injected.\n[3/4] Compiling Native Android Release (Gradle cache active)...\",
               \"token\": \"$CALLBACK_TOKEN\"
@@ -240,6 +242,7 @@ jobs:
             -d "{
               \"build_id\": \"$BUILD_ID\",
               \"status\": \"building\",
+              \"append_log\": true,
               \"github_run_id\": \"${{ github.run_id }}\",
               \"build_log\": \"[3/4] Compilation complete!\n[4/4] Uploading build files...\",
               \"token\": \"$CALLBACK_TOKEN\"

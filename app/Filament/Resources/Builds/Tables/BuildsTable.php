@@ -69,7 +69,7 @@ class BuildsTable
                     ->icon('heroicon-o-document-text')
                     ->color('gray')
                     ->modalHeading('Build Logs')
-                    ->modalContent(fn (Build $record) => view('filament.components.build-logs', ['build' => $record])),
+                    ->modalContent(fn (Build $record) => view('filament.components.build-logs', ['build' => $record, 'isAdmin' => true])),
 
                 // Rebuild Action
                 Action::make('rebuild')

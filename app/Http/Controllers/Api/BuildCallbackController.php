@@ -68,7 +68,11 @@ class BuildCallbackController extends Controller
         if ($request->input('status') === 'building') {
             $build->build_status = 'building';
             if ($request->has('build_log')) {
-                $build->build_log = $request->input('build_log');
+                if ($request->boolean('append_log')) {
+                    $build->build_log = $build->build_log . "\n" . $request->input('build_log');
+                } else {
+                    $build->build_log = $request->input('build_log');
+                }
             }
             $build->save();
 

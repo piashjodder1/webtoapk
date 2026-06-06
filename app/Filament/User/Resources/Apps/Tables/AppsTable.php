@@ -123,7 +123,7 @@ class AppsTable
                             if (!$latestBuild) {
                                 return view('filament.components.build-logs-empty');
                             }
-                            return view('filament.components.build-logs', ['build' => $latestBuild]);
+                            return view('filament.components.build-logs', ['build' => $latestBuild, 'isAdmin' => false]);
                         })
                         ->visible(fn (App $record) => $record->latestBuild()->exists()),
                 ])
