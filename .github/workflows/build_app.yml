@@ -3,109 +3,9 @@ name: Build Android App
 on:
   workflow_dispatch:
     inputs:
-      app_id:
-        description: 'App Database ID'
+      build_config:
+        description: 'JSON string containing all build configuration'
         required: true
-      build_id:
-        description: 'Build Database ID'
-        required: true
-      app_name:
-        description: 'Application Label Name'
-        required: true
-      package_name:
-        description: 'Android Package Name'
-        required: true
-      website_url:
-        description: 'Target Website URL'
-        required: true
-      icon_url:
-        description: 'Icon URL'
-        required: false
-      splash_url:
-        description: 'Splash Screen Image URL'
-        required: false
-      enable_pull_refresh:
-        description: 'Enable Pull to Refresh (true/false)'
-        required: true
-        default: 'false'
-      enable_offline_page:
-        description: 'Enable Offline Page (true/false)'
-        required: true
-        default: 'false'
-      enable_push_notification:
-        description: 'Enable Push Notification via OneSignal (true/false)'
-        required: true
-        default: 'false'
-      enable_exit_confirmation:
-        description: 'Enable Exit Confirmation Dialog (true/false)'
-        required: true
-        default: 'false'
-      enable_loading_progress_bar:
-        description: 'Enable Loading Progress Bar (true/false)'
-        required: true
-        default: 'false'
-      enable_external_links_in_browser:
-        description: 'Open External Links in Browser (true/false)'
-        required: true
-        default: 'false'
-      enable_bottom_navigation:
-        description: 'Enable Bottom Navigation (true/false)'
-        required: false
-        default: 'false'
-      bottom_navigation_items:
-        description: 'Bottom Navigation Items (JSON)'
-        required: false
-        default: '[]'
-      enable_custom_header:
-        description: 'Enable Custom Header (true/false)'
-        required: false
-        default: 'false'
-      header_logo_url:
-        description: 'Header Logo URL'
-        required: false
-        default: ''
-      onesignal_app_id:
-        description: 'OneSignal App ID'
-        required: false
-        default: ''
-      version_name:
-        description: 'Android Version Name'
-        required: false
-        default: '1.0.0'
-      version_code:
-        description: 'Android Version Code'
-        required: false
-        default: '1'
-
-      build_type:
-        description: 'Build Format (apk, aab, both)'
-        required: true
-        default: 'apk'
-      callback_url:
-        description: 'Webhook Callback URL'
-        required: true
-      callback_token:
-        description: 'Callback Authentication Token'
-        required: true
-      r2_key:
-        description: 'Cloudflare R2 Access Key'
-        required: false
-      r2_secret:
-        description: 'Cloudflare R2 Secret Key'
-        required: false
-      r2_bucket:
-        description: 'Cloudflare R2 Bucket'
-        required: false
-      r2_endpoint:
-        description: 'Cloudflare R2 Endpoint'
-        required: false
-      r2_public_url:
-        description: 'Cloudflare R2 Public URL'
-        required: false
-      storage_driver:
-        description: 'Active Storage Driver'
-        required: false
-        default: 'local'
 
 jobs:
   build:
@@ -115,37 +15,55 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Parse Build Config JSON
+        env:
+          BUILD_CONFIG_JSON: ${{ github.event.inputs.build_config }}
+        run: |
+          echo "Writing build_config to file..."
+          echo "$BUILD_CONFIG_JSON" > build_config.json
+
       - name: Send Starting Status Callback
         run: |
-          curl -s -X POST "${{ github.event.inputs.callback_url }}" \
+          BUILD_ID=$(jq -r '.build_id' build_config.json)
+          CALLBACK_URL=$(jq -r '.callback_url' build_config.json)
+          CALLBACK_TOKEN=$(jq -r '.callback_token' build_config.json)
+          curl -s -X POST "$CALLBACK_URL" \
             -H "Content-Type: application/json" \
-            -d '{
-              "build_id": "${{ github.event.inputs.build_id }}",
-              "status": "building",
-              "github_run_id": "${{ github.run_id }}",
-              "build_log": "[1/4] Setting up build environment...",
-              "token": "${{ github.event.inputs.callback_token }}"
-            }' || true
+            -d "{
+              \"build_id\": \"$BUILD_ID\",
+              \"status\": \"building\",
+              \"github_run_id\": \"${{ github.run_id }}\",
+              \"build_log\": \"[1/4] Setting up build environment...\",
+              \"token\": \"$CALLBACK_TOKEN\"
+            }" || true
 
       # ── STEP 1: Inject config.json ────────────────────────────────────────
       - name: Inject App Config
-        env:
-          APP_NAME: ${{ github.event.inputs.app_name }}
-          WEBSITE_URL: ${{ github.event.inputs.website_url }}
-          PACKAGE_NAME: ${{ github.event.inputs.package_name }}
-          ENABLE_PULL_REFRESH: ${{ github.event.inputs.enable_pull_refresh }}
-          ENABLE_OFFLINE_PAGE: ${{ github.event.inputs.enable_offline_page }}
-          ENABLE_PUSH_NOTIFICATION: ${{ github.event.inputs.enable_push_notification }}
-          ENABLE_EXIT_CONFIRMATION: ${{ github.event.inputs.enable_exit_confirmation }}
-          ENABLE_LOADING_PROGRESS_BAR: ${{ github.event.inputs.enable_loading_progress_bar }}
-          ENABLE_EXTERNAL_LINKS_IN_BROWSER: ${{ github.event.inputs.enable_external_links_in_browser }}
-          ENABLE_BOTTOM_NAVIGATION: ${{ github.event.inputs.enable_bottom_navigation }}
-          BOTTOM_NAVIGATION_ITEMS: ${{ github.event.inputs.bottom_navigation_items }}
-          ENABLE_CUSTOM_HEADER: ${{ github.event.inputs.enable_custom_header }}
-          HEADER_LOGO_URL: ${{ github.event.inputs.header_logo_url }}
-          ONESIGNAL_APP_ID: ${{ github.event.inputs.onesignal_app_id }}
-          VERSION_NAME: ${{ github.event.inputs.version_name }}
-          VERSION_CODE: ${{ github.event.inputs.version_code }}
+        run: |
+          mkdir -p android-template/app/src/main/assets
+          python3 -u -c "import json, os;
+          config_in = json.load(open('build_config.json'));
+          config = {
+              'app_name': config_in.get('app_name', 'App'),
+              'website_url': config_in.get('website_url', ''),
+              'package_name': config_in.get('package_name', ''),
+              'enable_pull_refresh': config_in.get('enable_pull_refresh') == 'true',
+              'enable_offline_page': config_in.get('enable_offline_page') == 'true',
+              'enable_push_notification': config_in.get('enable_push_notification') == 'true',
+              'enable_exit_confirmation': config_in.get('enable_exit_confirmation') == 'true',
+              'enable_loading_progress_bar': config_in.get('enable_loading_progress_bar') == 'true',
+              'enable_external_links_in_browser': config_in.get('enable_external_links_in_browser') == 'true',
+              'enable_bottom_navigation': config_in.get('enable_bottom_navigation') == 'true',
+              'bottom_navigation_items': json.loads(config_in.get('bottom_navigation_items', '[]')),
+              'enable_custom_header': config_in.get('enable_custom_header') == 'true',
+              'header_logo_url': config_in.get('header_logo_url', ''),
+              'onesignal_app_id': config_in.get('onesignal_app_id', ''),
+              'version_name': config_in.get('version_name', '1.0.0'),
+              'version_code': int(config_in.get('version_code', '1'))
+          };
+          open('android-template/app/src/main/assets/config.json', 'w').write(json.dumps(config, indent=2));
+          print('config.json written:');
+          print(open('android-template/app/src/main/assets/config.json').read())"
         run: |
           mkdir -p android-template/app/src/main/assets
           python3 -u -c "import json, os; config = {'app_name': os.environ.get('APP_NAME', 'App'), 'website_url': os.environ.get('WEBSITE_URL', ''), 'package_name': os.environ.get('PACKAGE_NAME', ''), 'enable_pull_refresh': os.environ.get('ENABLE_PULL_REFRESH') == 'true', 'enable_offline_page': os.environ.get('ENABLE_OFFLINE_PAGE') == 'true', 'enable_push_notification': os.environ.get('ENABLE_PUSH_NOTIFICATION') == 'true', 'enable_exit_confirmation': os.environ.get('ENABLE_EXIT_CONFIRMATION') == 'true', 'enable_loading_progress_bar': os.environ.get('ENABLE_LOADING_PROGRESS_BAR') == 'true', 'enable_external_links_in_browser': os.environ.get('ENABLE_EXTERNAL_LINKS_IN_BROWSER') == 'true', 'enable_bottom_navigation': os.environ.get('ENABLE_BOTTOM_NAVIGATION') == 'true', 'bottom_navigation_items': json.loads(os.environ.get('BOTTOM_NAVIGATION_ITEMS', '[]')), 'enable_custom_header': os.environ.get('ENABLE_CUSTOM_HEADER') == 'true', 'header_logo_url': os.environ.get('HEADER_LOGO_URL', ''), 'onesignal_app_id': os.environ.get('ONESIGNAL_APP_ID', ''), 'version_name': os.environ.get('VERSION_NAME', '1.0.0'), 'version_code': int(os.environ.get('VERSION_CODE', '1'))}; open('android-template/app/src/main/assets/config.json', 'w').write(json.dumps(config, indent=2)); print('config.json written:'); print(open('android-template/app/src/main/assets/config.json').read())"
@@ -158,14 +76,16 @@ jobs:
       - name: Process Icon, Package Name, and App Label
         run: |
           python3 - << 'EOF'
-          import os, re, urllib.request
+          import os, re, urllib.request, json
           from PIL import Image
 
-          icon_url = "${{ github.event.inputs.icon_url }}"
-          app_name = "${{ github.event.inputs.app_name }}"
-          package_name = "${{ github.event.inputs.package_name }}"
-          version_name = "${{ github.event.inputs.version_name }}"
-          version_code = "${{ github.event.inputs.version_code }}"
+          config = json.load(open("build_config.json"))
+
+          icon_url = config.get("icon_url", "")
+          app_name = config.get("app_name", "")
+          package_name = config.get("package_name", "")
+          version_name = config.get("version_name", "1.0.0")
+          version_code = config.get("version_code", "1")
 
           # ── 1. Icon Download and Resizing ──
           if icon_url:
@@ -248,92 +168,113 @@ jobs:
 
       - name: Send Build Starting Callback
         run: |
-          curl -s -X POST "${{ github.event.inputs.callback_url }}" \
+          BUILD_ID=$(jq -r '.build_id' build_config.json)
+          CALLBACK_URL=$(jq -r '.callback_url' build_config.json)
+          CALLBACK_TOKEN=$(jq -r '.callback_token' build_config.json)
+          curl -s -X POST "$CALLBACK_URL" \
             -H "Content-Type: application/json" \
-            -d '{
-              "build_id": "${{ github.event.inputs.build_id }}",
-              "status": "building",
-              "github_run_id": "${{ github.run_id }}",
-              "build_log": "[1/4] Environment ready.\n[2/4] App config, icon, and package identity injected.\n[3/4] Compiling Native Android Release (Gradle cache active)...",
-              "token": "${{ github.event.inputs.callback_token }}"
-            }' || true
+            -d "{
+              \"build_id\": \"$BUILD_ID\",
+              \"status\": \"building\",
+              \"github_run_id\": \"${{ github.run_id }}\",
+              \"build_log\": \"[1/4] Environment ready.\n[2/4] App config, icon, and package identity injected.\n[3/4] Compiling Native Android Release (Gradle cache active)...\",
+              \"token\": \"$CALLBACK_TOKEN\"
+            }" || true
 
       - name: Make Gradle Wrapper Executable
         run: chmod +x android-template/gradlew
 
       # ── STEP 4: Build APK and AAB ─────────────────────────────────────────
       - name: Build APK (Release)
-        if: ${{ github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == 'both' }}
         run: |
-          cd android-template
-          ./gradlew assembleRelease --stacktrace 2>&1 | tee ../build_output.log
+          BUILD_TYPE=$(jq -r '.build_type' build_config.json)
+          if [ "$BUILD_TYPE" = "apk" ] || [ "$BUILD_TYPE" = "both" ]; then
+            cd android-template
+            ./gradlew assembleRelease --stacktrace 2>&1 | tee ../build_output.log
+          fi
 
       - name: Rename APK output
-        if: ${{ github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == 'both' }}
         run: |
-          APK_DIR="android-template/app/build/outputs/apk/release"
-          APP_SAFE_NAME=$(echo "${{ github.event.inputs.app_name }}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
+          BUILD_TYPE=$(jq -r '.build_type' build_config.json)
+          if [ "$BUILD_TYPE" = "apk" ] || [ "$BUILD_TYPE" = "both" ]; then
+            APK_DIR="android-template/app/build/outputs/apk/release"
+            APP_NAME=$(jq -r '.app_name' build_config.json)
+            APP_SAFE_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
           if [ -f "$APK_DIR/app-release.apk" ]; then
             mv "$APK_DIR/app-release.apk" "$APK_DIR/${APP_SAFE_NAME}-release.apk"
             echo "APK renamed to ${APP_SAFE_NAME}-release.apk"
           fi
-          if [ -f "$APK_DIR/app-release-unsigned.apk" ]; then
-            mv "$APK_DIR/app-release-unsigned.apk" "$APK_DIR/${APP_SAFE_NAME}-release-unsigned.apk"
+            if [ -f "$APK_DIR/app-release-unsigned.apk" ]; then
+              mv "$APK_DIR/app-release-unsigned.apk" "$APK_DIR/${APP_SAFE_NAME}-release-unsigned.apk"
+            fi
           fi
 
       - name: Build AAB (Release)
-        if: ${{ github.event.inputs.build_type == 'aab' || github.event.inputs.build_type == 'both' }}
         run: |
-          cd android-template
-          ./gradlew bundleRelease --stacktrace 2>&1 | tee -a ../build_output.log
+          BUILD_TYPE=$(jq -r '.build_type' build_config.json)
+          if [ "$BUILD_TYPE" = "aab" ] || [ "$BUILD_TYPE" = "both" ]; then
+            cd android-template
+            ./gradlew bundleRelease --stacktrace 2>&1 | tee -a ../build_output.log
+          fi
 
       - name: Rename AAB output
-        if: ${{ github.event.inputs.build_type == 'aab' || github.event.inputs.build_type == 'both' }}
         run: |
-          AAB_DIR="android-template/app/build/outputs/bundle/release"
-          APP_SAFE_NAME=$(echo "${{ github.event.inputs.app_name }}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
+          BUILD_TYPE=$(jq -r '.build_type' build_config.json)
+          if [ "$BUILD_TYPE" = "aab" ] || [ "$BUILD_TYPE" = "both" ]; then
+            AAB_DIR="android-template/app/build/outputs/bundle/release"
+            APP_NAME=$(jq -r '.app_name' build_config.json)
+            APP_SAFE_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
           if [ -f "$AAB_DIR/app-release.aab" ]; then
             mv "$AAB_DIR/app-release.aab" "$AAB_DIR/${APP_SAFE_NAME}-release.aab"
-            echo "AAB renamed to ${APP_SAFE_NAME}-release.aab"
+              echo "AAB renamed to ${APP_SAFE_NAME}-release.aab"
+            fi
           fi
 
       # ── STEP 5: Upload to Cloudflare R2 or uguu.se fallback ──────────────
       - name: Send Uploading Callback
         if: success()
         run: |
-          curl -s -X POST "${{ github.event.inputs.callback_url }}" \
+          BUILD_ID=$(jq -r '.build_id' build_config.json)
+          CALLBACK_URL=$(jq -r '.callback_url' build_config.json)
+          CALLBACK_TOKEN=$(jq -r '.callback_token' build_config.json)
+          curl -s -X POST "$CALLBACK_URL" \
             -H "Content-Type: application/json" \
-            -d '{
-              "build_id": "${{ github.event.inputs.build_id }}",
-              "status": "building",
-              "github_run_id": "${{ github.run_id }}",
-              "build_log": "[3/4] Compilation complete!\n[4/4] Uploading build files...",
-              "token": "${{ github.event.inputs.callback_token }}"
-            }' || true
+            -d "{
+              \"build_id\": \"$BUILD_ID\",
+              \"status\": \"building\",
+              \"github_run_id\": \"${{ github.run_id }}\",
+              \"build_log\": \"[3/4] Compilation complete!\n[4/4] Uploading build files...\",
+              \"token\": \"$CALLBACK_TOKEN\"
+            }" || true
 
       - name: Upload and Dispatch Completed Callback
         if: success()
-        env:
-          AWS_ACCESS_KEY_ID: ${{ github.event.inputs.r2_key }}
-          AWS_SECRET_ACCESS_KEY: ${{ github.event.inputs.r2_secret }}
-          AWS_DEFAULT_REGION: auto
         run: |
+          R2_KEY=$(jq -r '.r2_key' build_config.json)
+          R2_SECRET=$(jq -r '.r2_secret' build_config.json)
+          export AWS_ACCESS_KEY_ID="$R2_KEY"
+          export AWS_SECRET_ACCESS_KEY="$R2_SECRET"
+          export AWS_DEFAULT_REGION="auto"
+          
           APK_URL=""
           AAB_URL=""
-          PKG_NAME="${{ github.event.inputs.package_name }}"
-          BUILD_ID="${{ github.event.inputs.build_id }}"
-
-          APP_SAFE_NAME=$(echo "${{ github.event.inputs.app_name }}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
+          PKG_NAME=$(jq -r '.package_name' build_config.json)
+          BUILD_ID=$(jq -r '.build_id' build_config.json)
+          APP_NAME=$(jq -r '.app_name' build_config.json)
+          APP_SAFE_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
+          R2_BUCKET=$(jq -r '.r2_bucket' build_config.json)
+          R2_ENDPOINT=$(jq -r '.r2_endpoint' build_config.json)
+          R2_PUBLIC_URL=$(jq -r '.r2_public_url' build_config.json)
 
           # ── APK ──────────────────────────────────────────────────────────
           APK_FILE="android-template/app/build/outputs/apk/release/${APP_SAFE_NAME}-release.apk"
           if [ -f "$APK_FILE" ]; then
-            if [ -n "${{ github.event.inputs.r2_key }}" ]; then
-              R2_KEY="$PKG_NAME/builds/apk/${APP_SAFE_NAME}-release-${BUILD_ID}.apk"
-              if aws s3 cp "$APK_FILE" "s3://${{ github.event.inputs.r2_bucket }}/$R2_KEY" \
-                  --endpoint-url "${{ github.event.inputs.r2_endpoint }}" 2>&1; then
-                PUBLIC_URL="${{ github.event.inputs.r2_public_url }}"
-                APK_URL="${PUBLIC_URL%/}/$R2_KEY"
+            if [ -n "$R2_KEY" ] && [ "$R2_KEY" != "null" ]; then
+              R2_KEY_FILE="$PKG_NAME/builds/apk/${APP_SAFE_NAME}-release-${BUILD_ID}.apk"
+              if aws s3 cp "$APK_FILE" "s3://$R2_BUCKET/$R2_KEY_FILE" \
+                  --endpoint-url "$R2_ENDPOINT" 2>&1; then
+                PUBLIC_URL="$R2_PUBLIC_URL"
+                APK_URL="${PUBLIC_URL%/}/$R2_KEY_FILE"
                 echo "APK uploaded to R2: $APK_URL"
               else
                 echo "R2 upload failed, falling back to uguu.se..."
@@ -351,12 +292,12 @@ jobs:
           # ── AAB ──────────────────────────────────────────────────────────
           AAB_FILE="android-template/app/build/outputs/bundle/release/${APP_SAFE_NAME}-release.aab"
           if [ -f "$AAB_FILE" ]; then
-            if [ -n "${{ github.event.inputs.r2_key }}" ]; then
-              R2_KEY="$PKG_NAME/builds/aab/${APP_SAFE_NAME}-release-${BUILD_ID}.aab"
-              if aws s3 cp "$AAB_FILE" "s3://${{ github.event.inputs.r2_bucket }}/$R2_KEY" \
-                  --endpoint-url "${{ github.event.inputs.r2_endpoint }}" 2>&1; then
-                PUBLIC_URL="${{ github.event.inputs.r2_public_url }}"
-                AAB_URL="${PUBLIC_URL%/}/$R2_KEY"
+            if [ -n "$R2_KEY" ] && [ "$R2_KEY" != "null" ]; then
+              R2_KEY_FILE="$PKG_NAME/builds/aab/${APP_SAFE_NAME}-release-${BUILD_ID}.aab"
+              if aws s3 cp "$AAB_FILE" "s3://$R2_BUCKET/$R2_KEY_FILE" \
+                  --endpoint-url "$R2_ENDPOINT" 2>&1; then
+                PUBLIC_URL="$R2_PUBLIC_URL"
+                AAB_URL="${PUBLIC_URL%/}/$R2_KEY_FILE"
                 echo "AAB uploaded to R2: $AAB_URL"
               else
                 echo "AAB upload failed, falling back to uguu.se..."
@@ -372,11 +313,13 @@ jobs:
           fi
 
           # ── Final callback ────────────────────────────────────────────────
-          curl -X POST "${{ github.event.inputs.callback_url }}" \
-            -F "build_id=${{ github.event.inputs.build_id }}" \
+          CALLBACK_URL=$(jq -r '.callback_url' build_config.json)
+          CALLBACK_TOKEN=$(jq -r '.callback_token' build_config.json)
+          curl -X POST "$CALLBACK_URL" \
+            -F "build_id=$BUILD_ID" \
             -F "status=completed" \
             -F "github_run_id=${{ github.run_id }}" \
-            -F "token=${{ github.event.inputs.callback_token }}" \
+            -F "token=$CALLBACK_TOKEN" \
             -F "apk_url=$APK_URL" \
             -F "aab_url=$AAB_URL"
 
@@ -391,12 +334,16 @@ jobs:
             LOG_CONTENT='"No build log available. Check GitHub Actions panel."'
           fi
 
-          curl -X POST "${{ github.event.inputs.callback_url }}" \
+          BUILD_ID=$(jq -r '.build_id' build_config.json)
+          CALLBACK_URL=$(jq -r '.callback_url' build_config.json)
+          CALLBACK_TOKEN=$(jq -r '.callback_token' build_config.json)
+
+          curl -X POST "$CALLBACK_URL" \
             -H "Content-Type: application/json" \
             -d "{
-              \"build_id\": \"${{ github.event.inputs.build_id }}\",
+              \"build_id\": \"$BUILD_ID\",
               \"status\": \"failed\",
               \"github_run_id\": \"${{ github.run_id }}\",
               \"build_log\": $LOG_CONTENT,
-              \"token\": \"${{ github.event.inputs.callback_token }}\"
+              \"token\": \"$CALLBACK_TOKEN\"
             }"

@@ -49,7 +49,7 @@ class GitHubService
 
         $url = "https://api.github.com/repos/{$this->repository}/actions/workflows/{$this->workflowId}/dispatches";
 
-        $inputs = [
+        $buildConfig = [
             'app_id' => (string) $app->id,
             'build_id' => (string) $build->id,
             'app_name' => $app->app_name,
@@ -74,19 +74,20 @@ class GitHubService
             'build_type' => $build->build_type,
             'callback_url' => route('api.build-callback'),
             'callback_token' => Setting::get('build_callback_token', 'default_callback_secret_token_123'),
+
+            'r2_key'        => Setting::get('r2_key') ?? '',
+            'r2_secret'     => Setting::get('r2_secret') ?? '',
+            'r2_bucket'     => Setting::get('r2_bucket') ?? '',
+            'r2_endpoint'   => Setting::get('r2_endpoint') ?? '',
+            'r2_public_url' => Setting::get('r2_public_url') ?? '',
+            'storage_driver' => Setting::get('storage_driver') ?? 'local',
         ];
 
+        $inputs = [
+            'build_config' => json_encode($buildConfig),
+        ];
 
-
-        // Pass cloud storage credentials for builder direct uploads
-        $inputs['r2_key']        = Setting::get('r2_key') ?? '';
-        $inputs['r2_secret']     = Setting::get('r2_secret') ?? '';
-        $inputs['r2_bucket']     = Setting::get('r2_bucket') ?? '';
-        $inputs['r2_endpoint']   = Setting::get('r2_endpoint') ?? '';
-        $inputs['r2_public_url'] = Setting::get('r2_public_url') ?? '';
-        $inputs['storage_driver'] = Setting::get('storage_driver') ?? 'local';
-
-        Log::info("Triggering GitHub Workflow Dispatch at {$url}", $inputs);
+        Log::info("Triggering GitHub Workflow Dispatch at {$url} with combined JSON config.");
 
         $response = Http::withHeaders($this->getHeaders())
             ->post($url, [
