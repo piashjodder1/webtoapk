@@ -32,9 +32,22 @@ class SplashActivity : AppCompatActivity() {
             Log.i("OneSignal", "Push notifications disabled. Skipping OneSignal init.")
         }
 
-        // Set dynamic app name
+        // Set dynamic app name and theme color
         val appNameTextView: TextView = findViewById(R.id.splash_app_name)
         appNameTextView.text = AppConfig.appName
+        
+        try {
+            val color = android.graphics.Color.parseColor(AppConfig.themeColor)
+            window.decorView.setBackgroundColor(color)
+            window.statusBarColor = color
+            
+            val isLight = androidx.core.graphics.ColorUtils.calculateLuminance(color) > 0.5
+            androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = isLight
+            
+            appNameTextView.setTextColor(if (isLight) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
 
         // Try loading custom logo from assets
         val logoImageView: ImageView = findViewById(R.id.splash_logo)

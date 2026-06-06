@@ -65,6 +65,15 @@ class MainActivity : AppCompatActivity() {
         setupBottomNavigation()
         applyThemeColor()
 
+        // Ask for Notification permission on Android 13+
+        if (AppConfig.enablePushNotification && AppConfig.onesignalAppId.isNotEmpty()) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    androidx.core.app.ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+                }
+            }
+        }
+
         // Retry button reloads the website
         retryButton.setOnClickListener {
             if (isNetworkAvailable()) {
@@ -93,12 +102,25 @@ class MainActivity : AppCompatActivity() {
                     webView.goBack()
                 } else {
                     if (AppConfig.enableExitConfirmation) {
-                        android.app.AlertDialog.Builder(this@MainActivity)
+                        val dialog = android.app.AlertDialog.Builder(this@MainActivity)
                             .setTitle("Exit App")
                             .setMessage("Are you sure you want to exit?")
                             .setPositiveButton("Yes") { _, _ -> finish() }
                             .setNegativeButton("No", null)
-                            .show()
+                            .create()
+                        
+                        dialog.show()
+                        
+                        // Fix button text visibility by forcing black/white depending on the theme color
+                        try {
+                            val color = android.graphics.Color.parseColor(AppConfig.themeColor)
+                            val isLight = androidx.core.graphics.ColorUtils.calculateLuminance(color) > 0.5
+                            val textColor = if (isLight) android.graphics.Color.BLACK else android.graphics.Color.BLACK // Alert dialogs usually have white background, so text must be dark
+                            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)?.setTextColor(textColor)
+                            dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE)?.setTextColor(textColor)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     } else {
                         finish()
                     }
