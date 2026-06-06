@@ -70,7 +70,16 @@ class MainActivity : AppCompatActivity() {
                 if (webView.canGoBack()) {
                     webView.goBack()
                 } else {
-                    finish()
+                    if (AppConfig.enableExitConfirmation) {
+                        android.app.AlertDialog.Builder(this@MainActivity)
+                            .setTitle("Exit App")
+                            .setMessage("Are you sure you want to exit?")
+                            .setPositiveButton("Yes") { _, _ -> finish() }
+                            .setNegativeButton("No", null)
+                            .show()
+                    } else {
+                        finish()
+                    }
                 }
             }
         })
@@ -92,17 +101,38 @@ class MainActivity : AppCompatActivity() {
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                 super.onProgressChanged(view, newProgress)
-                progressBar.progress = newProgress
-                if (newProgress == 100) {
-                    progressBar.visibility = View.GONE
-                    swipeRefresh.isRefreshing = false
+                if (AppConfig.enableLoadingProgressBar) {
+                    progressBar.progress = newProgress
+                    if (newProgress == 100) {
+                        progressBar.visibility = View.GONE
+                        swipeRefresh.isRefreshing = false
+                    } else {
+                        progressBar.visibility = View.VISIBLE
+                    }
                 } else {
-                    progressBar.visibility = View.VISIBLE
+                    progressBar.visibility = View.GONE
+                    if (newProgress == 100) {
+                        swipeRefresh.isRefreshing = false
+                    }
                 }
             }
         }
 
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val url = request?.url?.toString() ?: return false
+                if (AppConfig.enableExternalLinksInBrowser) {
+                    val appHost = android.net.Uri.parse(AppConfig.websiteUrl).host
+                    val reqHost = android.net.Uri.parse(url).host
+                    if (appHost != null && reqHost != null && !reqHost.contains(appHost)) {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                        startActivity(intent)
+                        return true
+                    }
+                }
+                return super.shouldOverrideUrlLoading(view, request)
+            }
+
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 isPageLoading = true

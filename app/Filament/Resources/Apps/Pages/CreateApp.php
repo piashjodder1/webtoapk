@@ -8,4 +8,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateApp extends CreateRecord
 {
     protected static string $resource = AppResource::class;
+
+    public function getMaxContentWidth(): \Filament\Support\Enums\Width|string|null
+    {
+        return 'full';
+    }
 }

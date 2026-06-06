@@ -10,7 +10,9 @@ use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -31,22 +33,13 @@ class AppsTable
                     ->defaultImageUrl(asset('images/default-app-icon.png')),
 
                 TextColumn::make('app_name')
+                    ->label('App Name')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold')
-                    ->label('App Name'),
-
-                TextColumn::make('website_url')
-                    ->label('Website URL')
-                    ->limit(30),
-
-                TextColumn::make('package_name')
-                    ->label('Package Name')
-                    ->fontFamily('mono')
-                    ->searchable(),
+                    ->weight('bold'),
 
                 TextColumn::make('build_status')
-                    ->label('Status')
+                    ->label('Build Status')
                     ->badge()
                     ->colors([
                         'gray' => 'pending',
@@ -54,20 +47,7 @@ class AppsTable
                         'info' => 'building',
                         'success' => 'completed',
                         'danger' => 'failed',
-                    ])
-                    ->icon(fn (string $state): string => match ($state) {
-                        'pending' => 'heroicon-o-clock',
-                        'queued' => 'heroicon-o-ellipsis-horizontal',
-                        'building' => 'heroicon-o-arrow-path',
-                        'completed' => 'heroicon-o-check-circle',
-                        'failed' => 'heroicon-o-x-circle',
-                        default => 'heroicon-o-clock',
-                    }),
-
-                TextColumn::make('updated_at')
-                    ->label('Last Activity')
-                    ->dateTime()
-                    ->sortable(),
+                    ]),
             ])
             ->filters([
                 //
@@ -79,7 +59,7 @@ class AppsTable
 
                     // Trigger Build Action
                     Action::make('triggerBuild')
-                        ->label('Build App')
+                        ->label(fn (App $record) => $record->build_status === 'completed' ? 'Rebuild App' : 'Build App')
                         ->icon('heroicon-o-rocket-launch')
                         ->color('success')
                         ->form([
@@ -147,6 +127,11 @@ class AppsTable
                         })
                         ->visible(fn (App $record) => $record->latestBuild()->exists()),
                 ])
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }

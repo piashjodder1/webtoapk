@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\AppFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class App extends Model
 {
+    /** @use HasFactory<AppFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -22,6 +24,9 @@ class App extends Model
         'enable_pull_refresh',
         'enable_offline_page',
         'enable_push_notification',
+        'enable_exit_confirmation',
+        'enable_loading_progress_bar',
+        'enable_external_links_in_browser',
         'onesignal_app_id',
         'version_name',
         'version_code',
@@ -34,30 +39,11 @@ class App extends Model
         'enable_pull_refresh' => 'boolean',
         'enable_offline_page' => 'boolean',
         'enable_push_notification' => 'boolean',
-
+        'enable_exit_confirmation' => 'boolean',
+        'enable_loading_progress_bar' => 'boolean',
+        'enable_external_links_in_browser' => 'boolean',
     ];
 
-    /**
-     * The "booted" method of the model.
-     */
-    protected static function booted()
-    {
-        static::deleting(function ($app) {
-            $storageService = new \App\Services\StorageService();
-            // Delete the icon file if it exists
-            if ($app->icon_path) {
-                $storageService->delete($app->icon_path);
-            }
-            // Delete the splash file if it exists
-            if ($app->splash_path) {
-                $storageService->delete($app->splash_path);
-            }
-            // Delete all builds and files associated with this app
-            $storageService->deleteDirectory($app->package_name);
-            $storageService->deleteDirectory(\Illuminate\Support\Str::slug($app->package_name));
-            $storageService->deleteDirectory('apps/' . \Illuminate\Support\Str::slug($app->package_name));
-        });
-    }
 
     /**
      * Get the user that owns the app.

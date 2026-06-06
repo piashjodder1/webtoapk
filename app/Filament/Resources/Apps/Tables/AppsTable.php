@@ -147,7 +147,7 @@ class AppsTable
                         ->visible(fn (App $record) => $record->latestBuild()->exists()),
                 ])
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

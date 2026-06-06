@@ -36,6 +36,18 @@ on:
         description: 'Enable Push Notification via OneSignal (true/false)'
         required: true
         default: 'false'
+      enable_exit_confirmation:
+        description: 'Enable Exit Confirmation Dialog (true/false)'
+        required: true
+        default: 'false'
+      enable_loading_progress_bar:
+        description: 'Enable Loading Progress Bar (true/false)'
+        required: true
+        default: 'false'
+      enable_external_links_in_browser:
+        description: 'Open External Links in Browser (true/false)'
+        required: true
+        default: 'false'
       onesignal_app_id:
         description: 'OneSignal App ID'
         required: false
@@ -108,12 +120,15 @@ jobs:
           ENABLE_PULL_REFRESH: ${{ github.event.inputs.enable_pull_refresh }}
           ENABLE_OFFLINE_PAGE: ${{ github.event.inputs.enable_offline_page }}
           ENABLE_PUSH_NOTIFICATION: ${{ github.event.inputs.enable_push_notification }}
+          ENABLE_EXIT_CONFIRMATION: ${{ github.event.inputs.enable_exit_confirmation }}
+          ENABLE_LOADING_PROGRESS_BAR: ${{ github.event.inputs.enable_loading_progress_bar }}
+          ENABLE_EXTERNAL_LINKS_IN_BROWSER: ${{ github.event.inputs.enable_external_links_in_browser }}
           ONESIGNAL_APP_ID: ${{ github.event.inputs.onesignal_app_id }}
           VERSION_NAME: ${{ github.event.inputs.version_name }}
           VERSION_CODE: ${{ github.event.inputs.version_code }}
         run: |
           mkdir -p android-template/app/src/main/assets
-          python3 -u -c "import json, os; config = {'app_name': os.environ.get('APP_NAME', 'App'), 'website_url': os.environ.get('WEBSITE_URL', ''), 'package_name': os.environ.get('PACKAGE_NAME', ''), 'enable_pull_refresh': os.environ.get('ENABLE_PULL_REFRESH') == 'true', 'enable_offline_page': os.environ.get('ENABLE_OFFLINE_PAGE') == 'true', 'enable_push_notification': os.environ.get('ENABLE_PUSH_NOTIFICATION') == 'true', 'onesignal_app_id': os.environ.get('ONESIGNAL_APP_ID', ''), 'version_name': os.environ.get('VERSION_NAME', '1.0.0'), 'version_code': int(os.environ.get('VERSION_CODE', '1'))}; open('android-template/app/src/main/assets/config.json', 'w').write(json.dumps(config, indent=2)); print('config.json written:'); print(open('android-template/app/src/main/assets/config.json').read())"
+          python3 -u -c "import json, os; config = {'app_name': os.environ.get('APP_NAME', 'App'), 'website_url': os.environ.get('WEBSITE_URL', ''), 'package_name': os.environ.get('PACKAGE_NAME', ''), 'enable_pull_refresh': os.environ.get('ENABLE_PULL_REFRESH') == 'true', 'enable_offline_page': os.environ.get('ENABLE_OFFLINE_PAGE') == 'true', 'enable_push_notification': os.environ.get('ENABLE_PUSH_NOTIFICATION') == 'true', 'enable_exit_confirmation': os.environ.get('ENABLE_EXIT_CONFIRMATION') == 'true', 'enable_loading_progress_bar': os.environ.get('ENABLE_LOADING_PROGRESS_BAR') == 'true', 'enable_external_links_in_browser': os.environ.get('ENABLE_EXTERNAL_LINKS_IN_BROWSER') == 'true', 'onesignal_app_id': os.environ.get('ONESIGNAL_APP_ID', ''), 'version_name': os.environ.get('VERSION_NAME', '1.0.0'), 'version_code': int(os.environ.get('VERSION_CODE', '1'))}; open('android-template/app/src/main/assets/config.json', 'w').write(json.dumps(config, indent=2)); print('config.json written:'); print(open('android-template/app/src/main/assets/config.json').read())"
 
       - name: Install Python Pillow
         run: |
@@ -164,7 +179,12 @@ jobs:
                       # Round launcher icon
                       dest_round = f"android-template/app/src/main/res/{folder}/ic_launcher_round.png"
                       resized.save(dest_round)
-                      print(f"  Generated standard & round {folder} ({size}x{size}px)")
+                      
+                      # OneSignal default icon (transparent background is better, but this will do)
+                      dest_onesignal = f"android-template/app/src/main/res/{folder}/ic_stat_onesignal_default.png"
+                      resized.save(dest_onesignal)
+                      
+                      print(f"  Generated standard, round, and onesignal icons for {folder} ({size}x{size}px)")
                   print("All launcher icons processed.")
               except Exception as e:
                   print(f"Warning: Icon processing failed: {e}. Using default template icon.")

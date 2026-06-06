@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -25,8 +25,8 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
-        'role',
         'is_suspended',
+        'email_verified_at',
     ];
 
     /**
@@ -53,13 +53,7 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
-    /**
-     * Check if user is admin.
-     */
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
-    }
+
 
     /**
      * Check if user is suspended.
@@ -78,11 +72,7 @@ class User extends Authenticatable implements FilamentUser
             return false;
         }
 
-        if ($panel->getId() === 'admin') {
-            return $this->isAdmin();
-        }
-
-        return true;
+        return $panel->getId() === 'user';
     }
 
     /**

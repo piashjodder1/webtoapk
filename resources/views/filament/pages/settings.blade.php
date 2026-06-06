@@ -1,14 +1,11 @@
 <x-filament-panels::page>
-    <form wire:submit="save" class="space-y-6">
+    <form wire:submit="save">
         {{ $this->form }}
 
-        <x-filament::actions
-            :actions="[
-                \Filament\Actions\Action::make('save')
-                    ->label('Save Settings')
-                    ->submit('save')
-                    ->color('success'),
-            ]"
-        />
+        <div class="mt-4">
+            <x-filament::button type="submit">
+                Save changes
+            </x-filament::button>
+        </div>
     </form>
 </x-filament-panels::page>

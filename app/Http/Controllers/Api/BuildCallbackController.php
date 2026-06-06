@@ -37,12 +37,10 @@ class BuildCallbackController extends Controller
             return response()->json(['error' => $validator->errors()], 422);
         }
 
-        // Verify Callback Token
-        $storedToken = Setting::get('github_token'); // Or a dedicated callback token. We'll fallback to github_token for simplicity or check setting
-        // Let's create a dedicated callback token or verify against the github_token
+        // Verify Callback Token (hash_equals prevents timing attacks)
         $systemToken = Setting::get('build_callback_token', 'default_callback_secret_token_123');
 
-        if ($request->input('token') !== $systemToken) {
+        if (!hash_equals((string) $systemToken, (string) $request->input('token'))) {
             Log::warning('Build callback token mismatch');
             return response()->json(['error' => 'Unauthorized token'], 401);
         }
@@ -84,8 +82,7 @@ class BuildCallbackController extends Controller
         $storageService = new StorageService();
 
         if ($request->hasFile('apk_file')) {
-            $apkPath = $storageService->uploadIcon($request->file('apk_file'), $app->package_name . '/builds/apk'); // Reuse upload or custom
-            // Let's save APK file
+            $apkPath = $storageService->uploadApk($request->file('apk_file'), $app->package_name);
             $build->apk_url = $storageService->getUrl($apkPath);
             $app->apk_url = $build->apk_url;
         } elseif ($request->filled('apk_url')) {
@@ -94,7 +91,7 @@ class BuildCallbackController extends Controller
         }
 
         if ($request->hasFile('aab_file')) {
-            $aabPath = $storageService->uploadIcon($request->file('aab_file'), $app->package_name . '/builds/aab');
+            $aabPath = $storageService->uploadAab($request->file('aab_file'), $app->package_name);
             $build->aab_url = $storageService->getUrl($aabPath);
             $app->aab_url = $build->aab_url;
         } elseif ($request->filled('aab_url')) {

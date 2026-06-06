@@ -1,59 +1,171 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📱 Web To App Builder — SaaS Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Web To App Builder** হলো একটি Laravel-based SaaS প্ল্যাটফর্ম যা যেকোনো website URL থেকে Native Android APK ও AAB ফাইল তৈরি করে। GitHub Actions workflow ব্যবহার করে Flutter/Kotlin WebView টেমপ্লেট compile করা হয়।
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- 🌐 **Website to Android App** — যেকোনো URL দিয়ে native WebView app তৈরি
+- 🎨 **Custom Branding** — App icon ও splash screen upload
+- 🔔 **Push Notifications** — OneSignal integration
+- 🔄 **Pull to Refresh** — Native swipe-to-reload
+- 📡 **Offline Page** — Custom offline screen
+- 📦 **APK + AAB** — Testing ও Play Store উভয়ের জন্য
+- ☁️ **Cloud Storage** — Cloudflare R2 ও Amazon S3 সাপোর্ট
+- 👥 **Multi-User** — Admin ও User আলাদা panel
+- 📊 **Build Tracking** — Real-time build status ও history
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🛠️ Tech Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 12, PHP 8.2+ |
+| Admin UI | Filament 5.4 |
+| Build System | GitHub Actions |
+| Storage | Local / Cloudflare R2 / Amazon S3 |
+| Queue | Laravel Queue (database driver) |
+| Database | SQLite (dev) / MySQL (prod) |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🚀 Quick Start
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Prerequisites
+- PHP >= 8.2
+- Composer
+- Node.js & NPM
+- MySQL or SQLite
 
-### Premium Partners
+### Installation
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+# 1. Clone repository
+git clone <your-repo-url>
+cd website-to-app-builder
 
-## Contributing
+# 2. Install dependencies
+composer install
+npm install
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# 3. Setup environment
+cp .env.example .env
+php artisan key:generate
 
-## Code of Conduct
+# 4. Database setup
+php artisan migrate:fresh --seed
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# 5. Start development servers (all-in-one)
+composer dev
+```
 
-## Security Vulnerabilities
+### Default Accounts (after seeding)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Panel | URL | Email | Password |
+|---|---|---|---|
+| Admin | `/admin` | `admin@example.com` | `password` |
+| User | `/user` | `user@example.com` | `password` |
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## ⚙️ Configuration
+
+### 1. GitHub Actions Setup
+
+1. **Create a GitHub Repository** with the Flutter WebView template
+2. **Generate a PAT** (Personal Access Token) with `repo` and `workflow` scopes
+3. In Admin Panel → Settings → GitHub Configuration:
+   - Set `GitHub Repository` (e.g., `owner/repo`)
+   - Set your `GitHub PAT`
+   - Copy the `Build Callback Secret Token`
+4. In your GitHub repo → Settings → Secrets → Actions:
+   - Add secret: `API_CALLBACK_TOKEN` = (the copied token)
+
+### 2. Cloud Storage (Optional)
+
+By default files are stored locally. For production, configure cloud storage in Admin → Settings → Cloud Storage:
+
+**Cloudflare R2:**
+- R2 Access Key ID, Secret, Bucket name, Endpoint URL, Public URL
+
+**Amazon S3:**
+- AWS Access Key ID, Secret, Bucket name, Region (e.g., `us-east-1`)
+
+---
+
+## 📡 API Reference
+
+### Build Callback Webhook
+
+The GitHub Actions runner reports build status via this endpoint:
+
+```
+POST /api/build-callback
+```
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `build_id` | integer | ✅ | Build record ID |
+| `status` | string | ✅ | `building` / `completed` / `failed` |
+| `token` | string | ✅ | Must match `build_callback_token` |
+| `github_run_id` | string | - | GitHub Actions run ID |
+| `apk_url` | string | - | URL to built APK |
+| `aab_url` | string | - | URL to built AAB |
+| `build_log` | string | - | Error log (on failure) |
+
+---
+
+## 🏗️ Project Structure
+
+```
+app/
+├── Filament/
+│   ├── Pages/Settings.php          # Admin settings (GitHub, Storage)
+│   ├── Resources/                  # Admin CRUD resources
+│   ├── User/                       # User panel (apps, builds)
+│   └── Widgets/AdminStatsOverview.php
+├── Http/Controllers/Api/
+│   └── BuildCallbackController.php # GitHub runner webhook
+├── Jobs/TriggerAppBuildJob.php     # Dispatches GitHub workflow
+├── Models/                         # App, Build, User, Setting
+├── Observers/AppObserver.php       # App delete file cleanup
+├── Repositories/                   # Repository pattern
+└── Services/
+    ├── GitHubService.php           # GitHub Actions API
+    └── StorageService.php          # Dynamic storage (local/R2/S3)
+```
+
+---
+
+## 🖥️ Production Deployment
+
+### Queue Worker (Supervisor)
+
+```ini
+[program:laravel-worker]
+command=php /var/www/yourapp/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+user=www-data
+numprocs=2
+```
+
+### Cron Scheduler
+
+```cron
+* * * * * cd /var/www/yourapp && php artisan schedule:run >> /dev/null 2>&1
+```
+
+### Storage Link
+
+```bash
+php artisan storage:link
+```
+
+---
+
+## 📄 License
+
+MIT License

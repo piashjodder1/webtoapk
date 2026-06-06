@@ -6,6 +6,9 @@ use App\Models\Setting;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\FileUpload;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -40,7 +43,33 @@ class Settings extends Page implements HasForms
             'r2_secret',
             'r2_bucket',
             'r2_endpoint',
-            'r2_public_url'
+            'r2_public_url',
+            's3_key',
+            's3_secret',
+            's3_bucket',
+            's3_region',
+            
+            // Site Settings
+            'site_logo',
+            'favicon',
+            'seo_title',
+            'seo_description',
+            'seo_keywords',
+            'seo_author',
+            'seo_robots',
+            'theme_color',
+            'og_title',
+            'og_description',
+            'og_image',
+            'og_url',
+            'og_type',
+            'twitter_card',
+            'twitter_title',
+            'twitter_description',
+            'twitter_image',
+            'canonical_url',
+            'google_site_verification',
+            'bing_verification',
         ];
 
         $state = [];
@@ -63,6 +92,59 @@ class Settings extends Page implements HasForms
             ->components([
                 Tabs::make('Settings')
                     ->tabs([
+                        Tab::make('Site Settings')
+                            ->icon('heroicon-o-paint-brush')
+                            ->schema([
+                                Section::make('Branding')
+                                    ->schema([
+                                        FileUpload::make('site_logo')
+                                            ->label('Site/Header Logo')
+                                            ->image()
+                                            ->directory('settings/logos')
+                                            ->helperText('Upload the main logo for the website header.'),
+                                        
+                                        FileUpload::make('favicon')
+                                            ->label('Favicon')
+                                            ->image()
+                                            ->directory('settings/favicons')
+                                            ->helperText('Upload the favicon (e.g. .ico or .png).'),
+                                    ])->columns(2),
+
+                                Section::make('SEO Metadata')
+                                    ->schema([
+                                        TextInput::make('seo_title')->label('Website Title'),
+                                        Textarea::make('seo_description')->label('Website Description')->rows(2),
+                                        TextInput::make('seo_keywords')->label('Keywords (comma separated)'),
+                                        TextInput::make('seo_author')->label('Author Name'),
+                                        TextInput::make('seo_robots')->label('Robots')->default('index, follow'),
+                                        TextInput::make('theme_color')->label('Theme Color')->default('#ffffff'),
+                                        TextInput::make('canonical_url')->label('Canonical URL'),
+                                    ])->columns(2),
+
+                                Section::make('Open Graph (Facebook/Messenger)')
+                                    ->schema([
+                                        TextInput::make('og_title')->label('OG Title'),
+                                        TextInput::make('og_description')->label('OG Description'),
+                                        TextInput::make('og_type')->label('OG Type')->default('website'),
+                                        TextInput::make('og_url')->label('OG URL'),
+                                        FileUpload::make('og_image')->label('OG Image')->image()->directory('settings/og'),
+                                    ])->columns(2),
+
+                                Section::make('Twitter/X Card')
+                                    ->schema([
+                                        TextInput::make('twitter_card')->label('Twitter Card Type')->default('summary_large_image'),
+                                        TextInput::make('twitter_title')->label('Twitter Title'),
+                                        TextInput::make('twitter_description')->label('Twitter Description'),
+                                        FileUpload::make('twitter_image')->label('Twitter Image')->image()->directory('settings/twitter'),
+                                    ])->columns(2),
+
+                                Section::make('Verifications')
+                                    ->schema([
+                                        TextInput::make('google_site_verification')->label('Google Site Verification'),
+                                        TextInput::make('bing_verification')->label('Bing/MSValidate.01 Code'),
+                                    ])->columns(2),
+                            ]),
+
                         Tab::make('GitHub Configuration')
                             ->icon('heroicon-o-globe-alt')
                             ->schema([
@@ -102,7 +184,8 @@ class Settings extends Page implements HasForms
                                             ->label('Active Build Storage Disk')
                                             ->options([
                                                 'local' => 'Local Disk (public/storage)',
-                                                'r2' => 'Cloudflare R2',
+                                                'r2'    => 'Cloudflare R2',
+                                                's3'    => 'Amazon S3',
                                             ])
                                             ->default('local')
                                             ->required()
@@ -130,6 +213,22 @@ class Settings extends Page implements HasForms
                                             ->placeholder('https://pub-xxxxxx.r2.dev or https://download.myapp.com')
                                             ->visible(fn ($get) => $get('storage_driver') === 'r2')
                                             ->columnSpan(2),
+
+                                        // Amazon S3 fields
+                                        TextInput::make('s3_key')
+                                            ->label('AWS Access Key ID')
+                                            ->visible(fn ($get) => $get('storage_driver') === 's3'),
+                                        TextInput::make('s3_secret')
+                                            ->label('AWS Secret Access Key')
+                                            ->password()
+                                            ->visible(fn ($get) => $get('storage_driver') === 's3'),
+                                        TextInput::make('s3_bucket')
+                                            ->label('S3 Bucket Name')
+                                            ->visible(fn ($get) => $get('storage_driver') === 's3'),
+                                        TextInput::make('s3_region')
+                                            ->label('S3 Region')
+                                            ->placeholder('us-east-1')
+                                            ->visible(fn ($get) => $get('storage_driver') === 's3'),
                                     ]),
                             ]),
                     ])
@@ -147,8 +246,18 @@ class Settings extends Page implements HasForms
             $group = 'general';
             if (str_starts_with($key, 'github_')) {
                 $group = 'github';
-            } elseif (in_array($key, ['storage_driver', 'r2_key', 'r2_secret', 'r2_bucket', 'r2_endpoint', 'r2_public_url'])) {
+            } elseif (in_array($key, [
+                'storage_driver',
+                'r2_key', 'r2_secret', 'r2_bucket', 'r2_endpoint', 'r2_public_url',
+                's3_key', 's3_secret', 's3_bucket', 's3_region',
+            ])) {
                 $group = 'storage';
+            } elseif (in_array($key, [
+                'site_logo', 'favicon', 'theme_color'
+            ])) {
+                $group = 'branding';
+            } elseif (str_starts_with($key, 'seo_') || str_starts_with($key, 'og_') || str_starts_with($key, 'twitter_') || str_contains($key, 'verification') || str_contains($key, 'url')) {
+                $group = 'seo';
             }
 
             // Save key

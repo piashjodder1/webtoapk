@@ -3,108 +3,109 @@
 namespace App\Filament\User\Resources\Apps\Schemas;
 
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
 
 class AppForm
 {
     public static function configure(Schema $schema): Schema
     {
-        return $schema
-            ->components([
-                Grid::make(3)
-                    ->schema([
-                        Section::make('App Details')
-                            ->description('Configure your application identity and target URL')
-                            ->columnSpan(2)
-                            ->schema([
-                                TextInput::make('app_name')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->placeholder('My WebView App')
-                                    ->label('App Name'),
+        return $schema->columns(1);
+    }
 
-                                TextInput::make('website_url')
-                                    ->required()
-                                    ->url()
-                                    ->placeholder('https://example.com')
-                                    ->label('Website URL'),
+    public static function getSteps(): array
+    {
+        return [
+            Step::make('App Details')
+                ->columns(2)
+                ->schema([
+                    Hidden::make('user_id')
+                        ->default(fn () => auth()->id()),
 
-                                TextInput::make('package_name')
-                                    ->required()
-                                    ->regex('/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+[0-9a-z_]$/i')
-                                    ->placeholder('com.example.myapp')
-                                    ->helperText('Must be a unique Android package name (e.g. com.company.appname)')
-                                    ->label('Package Name'),
-                            ]),
+                    TextInput::make('app_name')
+                        ->required()
+                        ->maxLength(255)
+                        ->label('App Name'),
 
-                        Section::make('App Branding')
-                            ->description('Upload launcher icons and loading screen')
-                            ->columnSpan(1)
-                            ->schema([
-                                FileUpload::make('icon_path')
-                                    ->image()
-                                    ->disk('public')
-                                    ->directory('icons')
-                                    ->label('App Icon')
-                                    ->helperText('512x512 PNG format recommended'),
+                    TextInput::make('website_url')
+                        ->required()
+                        ->url()
+                        ->label('Website URL'),
 
-                                FileUpload::make('splash_path')
-                                    ->image()
-                                    ->disk('public')
-                                    ->directory('splashes')
-                                    ->label('Splash Screen')
-                                    ->helperText('1242x2208 PNG format recommended'),
-                            ]),
+                    TextInput::make('package_name')
+                        ->required()
+                        ->regex('/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+[0-9a-z_]$/i')
+                        ->label('Package Name')
+                        ->columnSpanFull(),
+                ]),
 
-                        Section::make('App Version')
-                            ->description('Set the version for your Android app')
-                            ->columnSpan(3)
-                            ->columns(4)
-                            ->schema([
-                                TextInput::make('version_name')
-                                    ->label('Version Name')
-                                    ->placeholder('1.0.0')
-                                    ->helperText('Display version (e.g. 1.0.0, 2.5.1)'),
+            Step::make('Branding')
+                ->columns(2)
+                ->schema([
+                    FileUpload::make('icon_path')
+                        ->image()
+                        ->disk('public')
+                        ->directory('icons')
+                        ->label('App Icon'),
 
-                                TextInput::make('version_code')
-                                    ->label('Version Code')
-                                    ->placeholder('1')
-                                    ->numeric()
-                                    ->helperText('Increment this number for each Play Store release'),
-                            ]),
+                    FileUpload::make('splash_path')
+                        ->image()
+                        ->disk('public')
+                        ->directory('splashes')
+                        ->label('Splash Screen'),
+                ]),
 
-                        Section::make('App Features')
-                            ->description('Toggle WebView specific configurations')
-                            ->columnSpan(3)
-                            ->schema([
-                                Grid::make(4)
-                                    ->schema([
-                                        Toggle::make('enable_pull_refresh')
-                                            ->label('Pull to Refresh')
-                                            ->helperText('Allow pulling down to reload website page'),
+            Step::make('Features & Settings')
+                ->schema([
+                    Grid::make(2)
+                        ->schema([
+                            TextInput::make('version_name')
+                                ->label('Version Name')
+                                ->placeholder('1.0.0')
+                                ->default('1.0.0')
+                                ->helperText('Human-readable version (e.g. 1.0.0, 2.5.1)'),
 
-                                        Toggle::make('enable_offline_page')
-                                            ->label('Offline Page')
-                                            ->helperText('Show custom offline view when network is lost'),
+                            TextInput::make('version_code')
+                                ->label('Version Code')
+                                ->placeholder('1')
+                                ->default(1)
+                                ->numeric()
+                                ->helperText('Numeric version for Play Store (increment with each release)'),
+                        ]),
 
-                                        Toggle::make('enable_push_notification')
-                                            ->label('Push Notification (OneSignal)')
-                                            ->helperText('Send push notifications to users via OneSignal')
-                                            ->reactive(),
-                                    ]),
+                    Grid::make(3)
+                        ->schema([
+                            Toggle::make('enable_pull_refresh')
+                                ->label('Pull to Refresh'),
 
-                                TextInput::make('onesignal_app_id')
-                                    ->label('OneSignal App ID')
-                                    ->placeholder('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
-                                    ->helperText('Required if Push Notification is enabled. Get from OneSignal Dashboard > App Settings > Keys & IDs.')
-                                    ->required(fn ($get) => $get('enable_push_notification'))
-                                    ->hidden(fn ($get) => !$get('enable_push_notification')),
-                            ]),
-                    ]),
-            ]);
+                            Toggle::make('enable_offline_page')
+                                ->label('Offline Page'),
+
+                            Toggle::make('enable_push_notification')
+                                ->label('Push Notification (OneSignal)')
+                                ->reactive(),
+
+                            Toggle::make('enable_exit_confirmation')
+                                ->label('Exit Confirmation Dialog'),
+
+                            Toggle::make('enable_loading_progress_bar')
+                                ->label('Loading Progress Bar'),
+
+                            Toggle::make('enable_external_links_in_browser')
+                                ->label('Open External Links in Browser'),
+                        ]),
+
+                    TextInput::make('onesignal_app_id')
+                        ->label('OneSignal App ID')
+                        ->placeholder('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
+                        ->helperText('Required if Push Notification is enabled.')
+                        ->required(fn ($get) => $get('enable_push_notification'))
+                        ->hidden(fn ($get) => !$get('enable_push_notification')),
+                ]),
+        ];
     }
 }

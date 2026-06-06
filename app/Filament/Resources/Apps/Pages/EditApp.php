@@ -16,4 +16,9 @@ class EditApp extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    public function getMaxContentWidth(): \Filament\Support\Enums\Width|string|null
+    {
+        return 'full';
+    }
 }

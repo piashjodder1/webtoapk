@@ -60,6 +60,9 @@ class GitHubService
             'enable_pull_refresh' => $app->enable_pull_refresh ? 'true' : 'false',
             'enable_offline_page' => $app->enable_offline_page ? 'true' : 'false',
             'enable_push_notification' => $app->enable_push_notification ? 'true' : 'false',
+            'enable_exit_confirmation' => $app->enable_exit_confirmation ? 'true' : 'false',
+            'enable_loading_progress_bar' => $app->enable_loading_progress_bar ? 'true' : 'false',
+            'enable_external_links_in_browser' => $app->enable_external_links_in_browser ? 'true' : 'false',
             'onesignal_app_id' => $app->onesignal_app_id ?? '',
             'version_name' => $app->version_name ?? '1.0.0',
             'version_code' => (string) ($app->version_code ?? 1),
@@ -71,11 +74,11 @@ class GitHubService
 
 
 
-        // Pass Cloudflare R2 credentials for builder direct uploads
-        $inputs['r2_key'] = Setting::get('r2_key') ?? '';
-        $inputs['r2_secret'] = Setting::get('r2_secret') ?? '';
-        $inputs['r2_bucket'] = Setting::get('r2_bucket') ?? '';
-        $inputs['r2_endpoint'] = Setting::get('r2_endpoint') ?? '';
+        // Pass cloud storage credentials for builder direct uploads
+        $inputs['r2_key']        = Setting::get('r2_key') ?? '';
+        $inputs['r2_secret']     = Setting::get('r2_secret') ?? '';
+        $inputs['r2_bucket']     = Setting::get('r2_bucket') ?? '';
+        $inputs['r2_endpoint']   = Setting::get('r2_endpoint') ?? '';
         $inputs['r2_public_url'] = Setting::get('r2_public_url') ?? '';
         $inputs['storage_driver'] = Setting::get('storage_driver') ?? 'local';
 

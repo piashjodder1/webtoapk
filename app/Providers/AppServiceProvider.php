@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\App;
+use App\Observers\AppObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,5 +32,8 @@ class AppServiceProvider extends ServiceProvider
         if (str_starts_with(config('app.url'), 'https://')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
+
+        // Register model observers
+        App::observe(AppObserver::class);
     }
 }

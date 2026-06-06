@@ -27,7 +27,7 @@ class BuildStatusNotification extends Notification implements ShouldQueue
      *
      * @return array<int, string>
      */
-    public function channels(object $notifiable): array
+    public function via(object $notifiable): array
     {
         return ['database', 'mail'];
     }

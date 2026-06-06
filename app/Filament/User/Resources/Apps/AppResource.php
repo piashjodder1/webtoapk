@@ -14,11 +14,15 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
+use Illuminate\Database\Eloquent\Builder;
+
 class AppResource extends Resource
 {
     protected static ?string $model = App::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-device-phone-mobile';
+
+    // protected static ?string $recordTitleAttribute = 'app_name';
 
     public static function form(Schema $schema): Schema
     {
@@ -28,11 +32,6 @@ class AppResource extends Resource
     public static function table(Table $table): Table
     {
         return AppsTable::configure($table);
-    }
-
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
-    {
-        return parent::getEloquentQuery()->where('user_id', auth()->id());
     }
 
     public static function getRelations(): array
@@ -49,5 +48,10 @@ class AppResource extends Resource
             'create' => CreateApp::route('/create'),
             'edit' => EditApp::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('user_id', auth()->id());
     }
 }

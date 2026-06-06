@@ -15,12 +15,12 @@ class AppForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->columns(3)
             ->components([
-                Grid::make(3)
+                Section::make('App Ownership & Details')
+                    ->columnSpan(2)
+                    ->columns(2)
                     ->schema([
-                        Section::make('App Ownership & Details')
-                            ->columnSpan(2)
-                            ->schema([
                                 Select::make('user_id')
                                     ->relationship('user', 'name')
                                     ->required()
@@ -97,7 +97,6 @@ class AppForm
                                     ->required(fn ($get) => $get('enable_push_notification'))
                                     ->hidden(fn ($get) => !$get('enable_push_notification')),
                             ]),
-                    ]),
             ]);
     }
 }
