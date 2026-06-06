@@ -25,6 +25,10 @@ import android.graphics.drawable.PictureDrawable
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import coil.load
+import android.graphics.Color
+import androidx.core.graphics.ColorUtils
+import androidx.core.view.WindowInsetsControllerCompat
+import android.content.res.ColorStateList
 
 class MainActivity : AppCompatActivity() {
 
@@ -59,6 +63,7 @@ class MainActivity : AppCompatActivity() {
 
         setupCustomHeader()
         setupBottomNavigation()
+        applyThemeColor()
 
         // Retry button reloads the website
         retryButton.setOnClickListener {
@@ -157,6 +162,40 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             bottomNavigation.visibility = View.GONE
+        }
+    }
+
+    private fun applyThemeColor() {
+        try {
+            val color = Color.parseColor(AppConfig.themeColor)
+            val isLight = ColorUtils.calculateLuminance(color) > 0.5
+            
+            // Set Status Bar Color
+            window.statusBarColor = color
+            WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = isLight
+            
+            // Set Header Background
+            if (AppConfig.enableCustomHeader) {
+                customHeader.setBackgroundColor(color)
+            }
+            
+            // Set Bottom Navigation Background and Icon/Text Colors
+            if (AppConfig.enableBottomNavigation) {
+                bottomNavigation.setBackgroundColor(color)
+                
+                val itemColor = if (isLight) Color.BLACK else Color.WHITE
+                val states = arrayOf(
+                    intArrayOf(android.R.attr.state_checked),
+                    intArrayOf(-android.R.attr.state_checked)
+                )
+                val colors = intArrayOf(itemColor, ColorUtils.setAlphaComponent(itemColor, 150))
+                val colorStateList = ColorStateList(states, colors)
+                
+                bottomNavigation.itemIconTintList = colorStateList
+                bottomNavigation.itemTextColor = colorStateList
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 

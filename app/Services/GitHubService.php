@@ -68,6 +68,7 @@ class GitHubService
             'enable_custom_header' => $app->enable_custom_header ? 'true' : 'false',
             'header_logo_url' => $app->header_logo ? $storageService->getUrl($app->header_logo) : '',
             'onesignal_app_id' => $app->onesignal_app_id ?? '',
+            'theme_color' => $app->theme_color ?? '#FFFFFF',
             'version_name' => $app->version_name ?? '1.0.0',
             'version_code' => (string) ($app->version_code ?? 1),
 

@@ -12,6 +12,9 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Actions\Action;
+use Illuminate\Support\Facades\Http;
 
 class AppForm
 {
@@ -37,7 +40,27 @@ class AppForm
                     TextInput::make('website_url')
                         ->required()
                         ->url()
-                        ->label('Website URL'),
+                        ->label('Website URL')
+                        ->suffixAction(
+                            Action::make('detectThemeColor')
+                                ->icon('heroicon-m-magnifying-glass')
+                                ->label('Auto Detect Color')
+                                ->action(function ($set, $state) {
+                                    if (empty($state)) return;
+                                    try {
+                                        $response = Http::timeout(5)->get($state);
+                                        if ($response->successful()) {
+                                            $html = $response->body();
+                                            if (preg_match('/<meta[^>]*name=["\']theme-color["\'][^>]*content=["\']([^"\']+)["\']/i', $html, $matches) || preg_match('/<meta[^>]*content=["\']([^"\']+)["\'][^>]*name=["\']theme-color["\']/i', $html, $matches)) {
+                                                $color = $matches[1];
+                                                $set('theme_color', $color);
+                                            }
+                                        }
+                                    } catch (\Exception $e) {
+                                        // Ignore
+                                    }
+                                })
+                        ),
 
                     TextInput::make('package_name')
                         ->required()
@@ -60,6 +83,11 @@ class AppForm
                         ->disk('public')
                         ->directory('splashes')
                         ->label('Splash Screen'),
+                        
+                    ColorPicker::make('theme_color')
+                        ->label('Theme Color')
+                        ->default('#FFFFFF')
+                        ->helperText('This color will be used for the app bar and bottom navigation background.'),
                 ]),
 
             Step::make('Features & Settings')

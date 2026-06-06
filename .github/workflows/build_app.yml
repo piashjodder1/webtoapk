@@ -58,6 +58,7 @@ jobs:
               'enable_custom_header': config_in.get('enable_custom_header') == 'true',
               'header_logo_url': config_in.get('header_logo_url', ''),
               'onesignal_app_id': config_in.get('onesignal_app_id', ''),
+              'theme_color': config_in.get('theme_color', '#FFFFFF'),
               'version_name': config_in.get('version_name', '1.0.0'),
               'version_code': int(config_in.get('version_code', '1'))
           };

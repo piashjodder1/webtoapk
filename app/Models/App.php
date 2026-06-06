@@ -37,6 +37,7 @@ class App extends Model
         'bottom_navigation_items',
         'enable_custom_header',
         'header_logo',
+        'theme_color',
     ];
 
     protected $casts = [

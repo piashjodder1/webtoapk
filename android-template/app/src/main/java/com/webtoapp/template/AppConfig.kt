@@ -17,6 +17,7 @@ object AppConfig {
     var bottomNavigationItems: org.json.JSONArray? = null
     var enableCustomHeader: Boolean = false
     var headerLogoUrl: String = ""
+    var themeColor: String = "#FFFFFF"
     var onesignalAppId: String = ""
     var versionName: String = "1.0.0"
     var versionCode: Int = 1
@@ -41,6 +42,7 @@ object AppConfig {
             bottomNavigationItems = json.optJSONArray("bottom_navigation_items")
             enableCustomHeader = json.optBoolean("enable_custom_header", enableCustomHeader)
             headerLogoUrl = json.optString("header_logo_url", headerLogoUrl)
+            themeColor = json.optString("theme_color", themeColor)
             onesignalAppId = json.optString("onesignal_app_id", onesignalAppId)
             versionName = json.optString("version_name", versionName)
             versionCode = json.optInt("version_code", versionCode)
