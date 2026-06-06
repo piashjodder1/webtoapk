@@ -81,7 +81,7 @@
         <div class="step-num">02</div>
         <div class="step-icon"><i data-lucide="wrench" width="32" height="32"></i></div>
         <div class="step-title">Build Triggers</div>
-        <div class="step-desc">We dispatch a GitHub Actions workflow that compiles your native Android APK and AAB automatically.</div>
+        <div class="step-desc">Our dedicated servers automatically compile your native Android APK and AAB in the background.</div>
       </div>
       <div class="step-card reveal">
         <div class="step-num">03</div>
@@ -124,12 +124,22 @@
       <div class="feature-card reveal">
         <div class="feature-icon-wrap"><i data-lucide="bell"></i></div>
         <div class="feature-title">Push Notifications</div>
-        <div class="feature-desc">OneSignal integration for push notification support right out of the box.</div>
+        <div class="feature-desc">OneSignal integration for push notification support right out of the box, with automatic permission handling.</div>
       </div>
       <div class="feature-card reveal">
         <div class="feature-icon-wrap"><i data-lucide="package"></i></div>
         <div class="feature-title">APK + AAB</div>
         <div class="feature-desc">Build both APK for testing and AAB for Play Store release in a single workflow run.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon-wrap"><i data-lucide="droplet"></i></div>
+        <div class="feature-title">Dynamic Theme Color</div>
+        <div class="feature-desc">Set a custom theme color to dynamically style the app's status bar, splash screen, and bottom navigation.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon-wrap"><i data-lucide="shield"></i></div>
+        <div class="feature-title">Exit Confirmation</div>
+        <div class="feature-desc">Built-in exit confirmation dialog to prevent accidental app closures, styled with your custom theme color.</div>
       </div>
     </div>
   </div>
