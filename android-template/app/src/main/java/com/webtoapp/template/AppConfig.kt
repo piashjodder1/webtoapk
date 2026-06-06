@@ -22,7 +22,10 @@ object AppConfig {
             val jsonString = context.assets.open("config.json").bufferedReader().use { it.readText() }
             val json = JSONObject(jsonString)
             appName = json.optString("app_name", appName)
-            websiteUrl = json.optString("website_url", websiteUrl)
+            websiteUrl = json.optString("website_url", websiteUrl).trim().removeSuffix("/")
+            if (websiteUrl.isNotEmpty() && !websiteUrl.startsWith("http")) {
+                websiteUrl = "https://$websiteUrl"
+            }
             packageName = json.optString("package_name", packageName)
             enablePullRefresh = json.optBoolean("enable_pull_refresh", enablePullRefresh)
             enableOfflinePage = json.optBoolean("enable_offline_page", enableOfflinePage)
@@ -37,4 +40,5 @@ object AppConfig {
             e.printStackTrace()
         }
     }
+
 }

@@ -146,6 +146,8 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     return false
+                } else if (scheme == "javascript" || scheme == "about" || scheme == "data" || scheme == null) {
+                    return false
                 } else {
                     try {
                         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
