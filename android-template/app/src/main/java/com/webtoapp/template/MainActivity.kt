@@ -126,7 +126,11 @@ class MainActivity : AppCompatActivity() {
 
                 if (scheme == "http" || scheme == "https") {
                     if (AppConfig.enableExternalLinksInBrowser) {
-                        val appHost = android.net.Uri.parse(AppConfig.websiteUrl).host?.removePrefix("www.")
+                        var safeWebsiteUrl = AppConfig.websiteUrl
+                        if (!safeWebsiteUrl.startsWith("http")) {
+                            safeWebsiteUrl = "https://$safeWebsiteUrl"
+                        }
+                        val appHost = android.net.Uri.parse(safeWebsiteUrl).host?.removePrefix("www.")
                         val reqHost = uri.host?.removePrefix("www.")
 
                         if (appHost != null && reqHost != null) {
