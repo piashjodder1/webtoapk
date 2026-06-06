@@ -112,6 +112,8 @@ class MainActivity : AppCompatActivity() {
             if (AppConfig.headerLogoUrl.isNotEmpty()) {
                 headerLogo.load(AppConfig.headerLogoUrl) {
                     crossfade(true)
+                    setHeader("ngrok-skip-browser-warning", "true")
+                    error(android.R.drawable.ic_dialog_alert)
                 }
             }
         } else {
