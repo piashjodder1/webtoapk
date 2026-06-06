@@ -95,12 +95,10 @@ class GitHubService
                 'inputs' => $inputs
             ]);
 
-        if ($response->successful()) {
-            return true;
-        }
-
-        Log::error('GitHub Workflow Dispatch failed: ' . $response->body());
-        return false;
+        if (!$response->successful()) {
+            Log::error('GitHub API Error: ' . $response->body());
+            throw new \RuntimeException('GitHub API rejected the request. Error: ' . $response->body());
+        }return true;
     }
 
     /**
