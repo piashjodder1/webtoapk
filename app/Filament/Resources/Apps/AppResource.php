@@ -18,7 +18,7 @@ class AppResource extends Resource
 {
     protected static ?string $model = App::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-device-phone-mobile';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-device-phone-mobile';
 
     public static function form(Schema $schema): Schema
     {

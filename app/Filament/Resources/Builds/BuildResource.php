@@ -18,7 +18,7 @@ class BuildResource extends Resource
 {
     protected static ?string $model = Build::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';
 
     public static function canCreate(): bool
     {
