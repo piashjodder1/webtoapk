@@ -11,7 +11,12 @@
                 <p class="text-xs text-gray-400 mt-0.5">Unlock premium features.</p>
             </div>
         </div>
-        <button style="background-color: #3B30E8;" onmouseover="this.style.backgroundColor='#5B52FF'" onmouseout="this.style.backgroundColor='#3B30E8'" class="w-full md:w-auto text-white px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 text-xs font-bold whitespace-nowrap transition">
+        <button type="button" 
+            onclick="new FilamentNotification().title('Coming Soon').body('Pro features will be available in the next update!').info().send()"
+            style="background-color: #3B30E8;" 
+            onmouseover="this.style.backgroundColor='#5B52FF'" 
+            onmouseout="this.style.backgroundColor='#3B30E8'" 
+            class="w-full md:w-auto text-white px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 text-xs font-bold whitespace-nowrap transition">
             Upgrade Now <span class="text-sm ml-0.5">→</span>
         </button>
     </div>
