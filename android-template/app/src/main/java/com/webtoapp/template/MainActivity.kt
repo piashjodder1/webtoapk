@@ -19,6 +19,12 @@ import android.widget.ProgressBar
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.caverock.androidsvg.SVG
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import android.graphics.drawable.PictureDrawable
+import android.graphics.drawable.Drawable
+import android.widget.ImageView
+import coil.load
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,6 +33,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var offlineView: LinearLayout
     private lateinit var retryButton: Button
+    private lateinit var bottomNavigation: BottomNavigationView
+    private lateinit var customHeader: LinearLayout
+    private lateinit var headerLogo: ImageView
+    private lateinit var headerLoadingProgress: ProgressBar
 
     private var isOffline = false
     private var isPageLoading = false
@@ -42,6 +52,13 @@ class MainActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.loading_progress)
         offlineView = findViewById(R.id.offline_view)
         retryButton = findViewById(R.id.retry_button)
+        bottomNavigation = findViewById(R.id.bottom_navigation)
+        customHeader = findViewById(R.id.custom_header)
+        headerLogo = findViewById(R.id.header_logo)
+        headerLoadingProgress = findViewById(R.id.header_loading_progress)
+
+        setupCustomHeader()
+        setupBottomNavigation()
 
         // Retry button reloads the website
         retryButton.setOnClickListener {
@@ -89,6 +106,58 @@ class MainActivity : AppCompatActivity() {
         registerNetworkCallback()
     }
 
+    private fun setupCustomHeader() {
+        if (AppConfig.enableCustomHeader) {
+            customHeader.visibility = View.VISIBLE
+            if (AppConfig.headerLogoUrl.isNotEmpty()) {
+                headerLogo.load(AppConfig.headerLogoUrl) {
+                    crossfade(true)
+                }
+            }
+        } else {
+            customHeader.visibility = View.GONE
+        }
+    }
+
+    private fun setupBottomNavigation() {
+        if (AppConfig.enableBottomNavigation && AppConfig.bottomNavigationItems != null) {
+            bottomNavigation.visibility = View.VISIBLE
+            val items = AppConfig.bottomNavigationItems!!
+            val menu = bottomNavigation.menu
+            
+            for (i in 0 until items.length()) {
+                val itemObj = items.getJSONObject(i)
+                val name = itemObj.optString("name", "Item")
+                val url = itemObj.optString("url", "")
+                val svgString = itemObj.optString("svg", "")
+                
+                val menuItem = menu.add(0, i, i, name)
+                
+                if (svgString.isNotEmpty()) {
+                    try {
+                        val svg = SVG.getFromString(svgString)
+                        val drawable = PictureDrawable(svg.renderToPicture())
+                        menuItem.icon = drawable
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+            
+            bottomNavigation.setOnItemSelectedListener { item ->
+                val index = item.itemId
+                val itemObj = items.getJSONObject(index)
+                val url = itemObj.optString("url", "")
+                if (url.isNotEmpty()) {
+                    webView.loadUrl(url)
+                }
+                true
+            }
+        } else {
+            bottomNavigation.visibility = View.GONE
+        }
+    }
+
     private fun setupWebView() {
         val settings = webView.settings
         settings.javaScriptEnabled = true
@@ -103,14 +172,17 @@ class MainActivity : AppCompatActivity() {
                 super.onProgressChanged(view, newProgress)
                 if (AppConfig.enableLoadingProgressBar) {
                     progressBar.progress = newProgress
+                    headerLoadingProgress.visibility = View.VISIBLE
                     if (newProgress == 100) {
                         progressBar.visibility = View.GONE
+                        headerLoadingProgress.visibility = View.GONE
                         swipeRefresh.isRefreshing = false
                     } else {
                         progressBar.visibility = View.VISIBLE
                     }
                 } else {
                     progressBar.visibility = View.GONE
+                    headerLoadingProgress.visibility = View.GONE
                     if (newProgress == 100) {
                         swipeRefresh.isRefreshing = false
                     }

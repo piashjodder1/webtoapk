@@ -33,6 +33,10 @@ class App extends Model
         'apk_url',
         'aab_url',
         'build_status',
+        'enable_bottom_navigation',
+        'bottom_navigation_items',
+        'enable_custom_header',
+        'header_logo',
     ];
 
     protected $casts = [
@@ -42,6 +46,9 @@ class App extends Model
         'enable_exit_confirmation' => 'boolean',
         'enable_loading_progress_bar' => 'boolean',
         'enable_external_links_in_browser' => 'boolean',
+        'enable_bottom_navigation' => 'boolean',
+        'enable_custom_header' => 'boolean',
+        'bottom_navigation_items' => 'array',
     ];
 
 

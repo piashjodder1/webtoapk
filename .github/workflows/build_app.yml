@@ -48,6 +48,22 @@ on:
         description: 'Open External Links in Browser (true/false)'
         required: true
         default: 'false'
+      enable_bottom_navigation:
+        description: 'Enable Bottom Navigation (true/false)'
+        required: false
+        default: 'false'
+      bottom_navigation_items:
+        description: 'Bottom Navigation Items (JSON)'
+        required: false
+        default: '[]'
+      enable_custom_header:
+        description: 'Enable Custom Header (true/false)'
+        required: false
+        default: 'false'
+      header_logo_url:
+        description: 'Header Logo URL'
+        required: false
+        default: ''
       onesignal_app_id:
         description: 'OneSignal App ID'
         required: false
@@ -123,12 +139,16 @@ jobs:
           ENABLE_EXIT_CONFIRMATION: ${{ github.event.inputs.enable_exit_confirmation }}
           ENABLE_LOADING_PROGRESS_BAR: ${{ github.event.inputs.enable_loading_progress_bar }}
           ENABLE_EXTERNAL_LINKS_IN_BROWSER: ${{ github.event.inputs.enable_external_links_in_browser }}
+          ENABLE_BOTTOM_NAVIGATION: ${{ github.event.inputs.enable_bottom_navigation }}
+          BOTTOM_NAVIGATION_ITEMS: ${{ github.event.inputs.bottom_navigation_items }}
+          ENABLE_CUSTOM_HEADER: ${{ github.event.inputs.enable_custom_header }}
+          HEADER_LOGO_URL: ${{ github.event.inputs.header_logo_url }}
           ONESIGNAL_APP_ID: ${{ github.event.inputs.onesignal_app_id }}
           VERSION_NAME: ${{ github.event.inputs.version_name }}
           VERSION_CODE: ${{ github.event.inputs.version_code }}
         run: |
           mkdir -p android-template/app/src/main/assets
-          python3 -u -c "import json, os; config = {'app_name': os.environ.get('APP_NAME', 'App'), 'website_url': os.environ.get('WEBSITE_URL', ''), 'package_name': os.environ.get('PACKAGE_NAME', ''), 'enable_pull_refresh': os.environ.get('ENABLE_PULL_REFRESH') == 'true', 'enable_offline_page': os.environ.get('ENABLE_OFFLINE_PAGE') == 'true', 'enable_push_notification': os.environ.get('ENABLE_PUSH_NOTIFICATION') == 'true', 'enable_exit_confirmation': os.environ.get('ENABLE_EXIT_CONFIRMATION') == 'true', 'enable_loading_progress_bar': os.environ.get('ENABLE_LOADING_PROGRESS_BAR') == 'true', 'enable_external_links_in_browser': os.environ.get('ENABLE_EXTERNAL_LINKS_IN_BROWSER') == 'true', 'onesignal_app_id': os.environ.get('ONESIGNAL_APP_ID', ''), 'version_name': os.environ.get('VERSION_NAME', '1.0.0'), 'version_code': int(os.environ.get('VERSION_CODE', '1'))}; open('android-template/app/src/main/assets/config.json', 'w').write(json.dumps(config, indent=2)); print('config.json written:'); print(open('android-template/app/src/main/assets/config.json').read())"
+          python3 -u -c "import json, os; config = {'app_name': os.environ.get('APP_NAME', 'App'), 'website_url': os.environ.get('WEBSITE_URL', ''), 'package_name': os.environ.get('PACKAGE_NAME', ''), 'enable_pull_refresh': os.environ.get('ENABLE_PULL_REFRESH') == 'true', 'enable_offline_page': os.environ.get('ENABLE_OFFLINE_PAGE') == 'true', 'enable_push_notification': os.environ.get('ENABLE_PUSH_NOTIFICATION') == 'true', 'enable_exit_confirmation': os.environ.get('ENABLE_EXIT_CONFIRMATION') == 'true', 'enable_loading_progress_bar': os.environ.get('ENABLE_LOADING_PROGRESS_BAR') == 'true', 'enable_external_links_in_browser': os.environ.get('ENABLE_EXTERNAL_LINKS_IN_BROWSER') == 'true', 'enable_bottom_navigation': os.environ.get('ENABLE_BOTTOM_NAVIGATION') == 'true', 'bottom_navigation_items': json.loads(os.environ.get('BOTTOM_NAVIGATION_ITEMS', '[]')), 'enable_custom_header': os.environ.get('ENABLE_CUSTOM_HEADER') == 'true', 'header_logo_url': os.environ.get('HEADER_LOGO_URL', ''), 'onesignal_app_id': os.environ.get('ONESIGNAL_APP_ID', ''), 'version_name': os.environ.get('VERSION_NAME', '1.0.0'), 'version_code': int(os.environ.get('VERSION_CODE', '1'))}; open('android-template/app/src/main/assets/config.json', 'w').write(json.dumps(config, indent=2)); print('config.json written:'); print(open('android-template/app/src/main/assets/config.json').read())"
 
       - name: Install Python Pillow
         run: |

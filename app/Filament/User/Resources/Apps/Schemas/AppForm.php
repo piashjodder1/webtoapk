@@ -5,8 +5,11 @@ namespace App\Filament\User\Resources\Apps\Schemas;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Repeater;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
 
@@ -105,6 +108,46 @@ class AppForm
                         ->helperText('Required if Push Notification is enabled.')
                         ->required(fn ($get) => $get('enable_push_notification'))
                         ->hidden(fn ($get) => !$get('enable_push_notification')),
+
+                    Section::make('Custom Header')
+                        ->schema([
+                            Toggle::make('enable_custom_header')
+                                ->label('Enable Custom Header')
+                                ->reactive(),
+                            
+                            FileUpload::make('header_logo')
+                                ->label('Header Logo')
+                                ->image()
+                                ->disk('public')
+                                ->directory('headers')
+                                ->helperText('Upload a logo to show in the app header')
+                                ->visible(fn ($get) => $get('enable_custom_header')),
+                        ]),
+
+                    Section::make('Bottom Navigation')
+                        ->schema([
+                            Toggle::make('enable_bottom_navigation')
+                                ->label('Enable Bottom Navigation Menu')
+                                ->reactive(),
+                                
+                            Repeater::make('bottom_navigation_items')
+                                ->label('Menu Items')
+                                ->schema([
+                                    TextInput::make('name')
+                                        ->required()
+                                        ->label('Item Name'),
+                                    TextInput::make('url')
+                                        ->required()
+                                        ->url()
+                                        ->label('URL to load'),
+                                    Textarea::make('svg')
+                                        ->required()
+                                        ->label('SVG Code')
+                                        ->helperText('Paste raw SVG code for the icon'),
+                                ])
+                                ->columns(3)
+                                ->visible(fn ($get) => $get('enable_bottom_navigation'))
+                        ]),
                 ]),
         ];
     }

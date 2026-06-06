@@ -43,4 +43,6 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("com.onesignal:OneSignal:5.1.26")
+    implementation("com.caverock:androidsvg-aar:1.4")
+    implementation("io.coil-kt:coil:2.5.0")
 }
