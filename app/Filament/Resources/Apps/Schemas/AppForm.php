@@ -39,27 +39,7 @@ class AppForm
                                 TextInput::make('website_url')
                                     ->required()
                                     ->url()
-                                    ->label('Website URL')
-                                    ->suffixAction(
-                                        Action::make('detectThemeColor')
-                                            ->icon('heroicon-m-magnifying-glass')
-                                            ->label('Auto Detect Color')
-                                            ->action(function ($set, $state) {
-                                                if (empty($state)) return;
-                                                try {
-                                                    $response = Http::timeout(5)->get($state);
-                                                    if ($response->successful()) {
-                                                        $html = $response->body();
-                                                        if (preg_match('/<meta[^>]*name=["\']theme-color["\'][^>]*content=["\']([^"\']+)["\']/i', $html, $matches) || preg_match('/<meta[^>]*content=["\']([^"\']+)["\'][^>]*name=["\']theme-color["\']/i', $html, $matches)) {
-                                                            $color = $matches[1];
-                                                            $set('theme_color', $color);
-                                                        }
-                                                    }
-                                                } catch (\Exception $e) {
-                                                    // Ignore
-                                                }
-                                            })
-                                    ),
+                                    ->label('Website URL'),
 
                                 TextInput::make('package_name')
                                     ->required()

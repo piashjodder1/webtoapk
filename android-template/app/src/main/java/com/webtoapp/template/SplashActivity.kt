@@ -41,10 +41,8 @@ class SplashActivity : AppCompatActivity() {
             window.decorView.setBackgroundColor(color)
             window.statusBarColor = color
             
-            val isLight = androidx.core.graphics.ColorUtils.calculateLuminance(color) > 0.5
-            androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = isLight
-            
-            appNameTextView.setTextColor(if (isLight) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+            // Using black color as default for app name text as requested previously
+            appNameTextView.setTextColor(android.graphics.Color.BLACK)
         } catch (e: Exception) {
             e.printStackTrace()
         }

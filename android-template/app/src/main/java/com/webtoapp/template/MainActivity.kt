@@ -189,12 +189,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun applyThemeColor() {
         try {
-            val color = Color.parseColor(AppConfig.themeColor)
-            val isLight = ColorUtils.calculateLuminance(color) > 0.5
+            val color = android.graphics.Color.parseColor(AppConfig.themeColor)
             
             // Set Status Bar Color
             window.statusBarColor = color
-            WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = isLight
             
             // Set Header Background
             if (AppConfig.enableCustomHeader) {
@@ -205,13 +203,14 @@ class MainActivity : AppCompatActivity() {
             if (AppConfig.enableBottomNavigation) {
                 bottomNavigation.setBackgroundColor(color)
                 
-                val itemColor = if (isLight) Color.BLACK else Color.WHITE
+                // Using black color as default for nav items as requested previously
+                val itemColor = android.graphics.Color.BLACK
                 val states = arrayOf(
                     intArrayOf(android.R.attr.state_checked),
                     intArrayOf(-android.R.attr.state_checked)
                 )
-                val colors = intArrayOf(itemColor, ColorUtils.setAlphaComponent(itemColor, 150))
-                val colorStateList = ColorStateList(states, colors)
+                val colors = intArrayOf(itemColor, androidx.core.graphics.ColorUtils.setAlphaComponent(itemColor, 150))
+                val colorStateList = android.content.res.ColorStateList(states, colors)
                 
                 bottomNavigation.itemIconTintList = colorStateList
                 bottomNavigation.itemTextColor = colorStateList
