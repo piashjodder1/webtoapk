@@ -102,13 +102,13 @@ class StorageService
 
         // App icons and splash images are always stored locally
         if (str_starts_with($path, 'apps/') || str_starts_with($path, 'icons/') || str_starts_with($path, 'splashes/')) {
-            return Storage::disk('public')->url($path);
+            return asset('storage/' . ltrim($path, '/'));
         }
 
         $driver = Setting::get('storage_driver', 'local');
 
         if ($driver === 'local') {
-            return Storage::disk('public')->url($path);
+            return asset('storage/' . ltrim($path, '/'));
         }
 
         if ($driver === 'r2') {
