@@ -33,6 +33,21 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
+        // Prevent FileUpload infinite loading on missing files
+        \Filament\Forms\Components\FileUpload::configureUsing(function (\Filament\Forms\Components\FileUpload $component) {
+            $component->getUploadedFileUrlUsing(function (\Filament\Forms\Components\FileUpload $component, string $file): ?string {
+                try {
+                    $disk = $component->getDisk();
+                    if ($disk->exists($file)) {
+                        return $disk->url($file);
+                    }
+                } catch (\Exception $e) {
+                    // Ignore disk errors
+                }
+                return null; // File doesn't exist, tell FilePond to ignore it
+            });
+        });
+
         // Register model observers
         App::observe(AppObserver::class);
     }
