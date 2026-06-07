@@ -37,8 +37,8 @@ class UserPanelProvider extends PanelProvider
                     ->url(fn (): string => route('logout'))
                     ->icon('heroicon-o-arrow-left-on-rectangle'),
             ])
-            ->brandLogo(fn () => \App\Models\Setting::get('site_logo') ? Storage::disk('public')->url(\App\Models\Setting::get('site_logo')) : null)
-            ->favicon(fn () => \App\Models\Setting::get('favicon') ? Storage::disk('public')->url(\App\Models\Setting::get('favicon')) : null)
+            ->brandLogo(fn () => \App\Models\Setting::get('site_logo') ? asset('storage/' . \App\Models\Setting::get('site_logo')) : null)
+            ->favicon(fn () => \App\Models\Setting::get('favicon') ? asset('storage/' . \App\Models\Setting::get('favicon')) : null)
             ->brandName(fn () => config('app.name', 'WebToApp'))
             ->brandLogoHeight('2rem')
             ->darkMode(false)

@@ -35,8 +35,8 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Violet,
                 'gray' => Color::Slate,
             ])
-            ->brandLogo(fn () => \App\Models\Setting::get('site_logo') ? Storage::disk('public')->url(\App\Models\Setting::get('site_logo')) : null)
-            ->favicon(fn () => \App\Models\Setting::get('favicon') ? Storage::disk('public')->url(\App\Models\Setting::get('favicon')) : null)
+            ->brandLogo(fn () => \App\Models\Setting::get('site_logo') ? asset('storage/' . \App\Models\Setting::get('site_logo')) : null)
+            ->favicon(fn () => \App\Models\Setting::get('favicon') ? asset('storage/' . \App\Models\Setting::get('favicon')) : null)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
