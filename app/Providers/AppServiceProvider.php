@@ -32,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
         if (str_starts_with(config('app.url'), 'https://')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
+
+        // Dynamically override public storage URL to use the current domain dynamically
+        config(['filesystems.disks.public.url' => asset('storage')]);
+
         // Register model observers
         App::observe(AppObserver::class);
     }
