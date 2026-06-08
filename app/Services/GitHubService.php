@@ -82,6 +82,11 @@ class GitHubService
             'r2_endpoint'   => Setting::get('r2_endpoint') ?? '',
             'r2_public_url' => Setting::get('r2_public_url') ?? '',
             'storage_driver' => Setting::get('storage_driver') ?? 'local',
+
+            'key_alias' => $app->keystore_data['key_alias'] ?? 'upload',
+            'keystore_password' => $app->keystore_data['keystore_password'] ?? 'secret',
+            'key_password' => $app->keystore_data['key_password'] ?? 'secret',
+            'base64_keystore' => $app->keystore_data['base64_keystore'] ?? '',
         ];
 
         $inputs = [

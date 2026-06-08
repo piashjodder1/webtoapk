@@ -103,12 +103,23 @@ class BuildCallbackController extends Controller
             $app->aab_url = $build->aab_url;
         }
 
+        // Handle newly generated keystore base64
+        if ($request->filled('new_keystore_base64')) {
+            $keystoreData = $app->keystore_data ?? [];
+            $keystoreData['base64_keystore'] = $request->input('new_keystore_base64');
+            $app->keystore_data = $keystoreData;
+        }
+
         $build->build_status = 'completed';
         $build->build_log = 'Build completed successfully. Files are ready for download.';
         $build->save();
 
         $app->build_status = 'completed';
         $app->save();
+
+        // Dispatch a job to delete the files from R2 after 10 minutes
+        \App\Jobs\DeleteBuildFilesJob::dispatch($app, $build->apk_url ?? '', $build->aab_url ?? '')
+            ->delay(now()->addMinutes(10));
 
         // Send notifications
         $user->notify(new BuildStatusNotification($build));

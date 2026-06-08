@@ -49,6 +49,17 @@ class TriggerAppBuildJob implements ShouldQueue
         $build->update(['build_status' => 'building']);
         $app->update(['build_status' => 'building']);
 
+        if (empty($app->keystore_data)) {
+            $app->update([
+                'keystore_data' => [
+                    'key_alias' => 'upload',
+                    'keystore_password' => \Illuminate\Support\Str::random(16),
+                    'key_password' => \Illuminate\Support\Str::random(16),
+                    'base64_keystore' => null,
+                ]
+            ]);
+        }
+
         // Trigger GitHub Actions run — re-throw on failure so queue can retry
         $success = $githubService->triggerBuild($app, $build);
 

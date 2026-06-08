@@ -181,6 +181,29 @@ jobs:
               \"token\": \"$CALLBACK_TOKEN\"
             }" || true
 
+      - name: Manage Keystore
+        run: |
+          KEY_ALIAS=$(jq -r '.key_alias' build_config.json)
+          KEYSTORE_PASSWORD=$(jq -r '.keystore_password' build_config.json)
+          KEY_PASSWORD=$(jq -r '.key_password' build_config.json)
+          BASE64_KEYSTORE=$(jq -r '.base64_keystore' build_config.json)
+          
+          if [ -z "$BASE64_KEYSTORE" ] || [ "$BASE64_KEYSTORE" == "null" ]; then
+            echo "Generating new keystore..."
+            keytool -genkey -v -keystore android-template/app/release.jks -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" -dname "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown"
+            # Base64 encode it and save to a file
+            base64 android-template/app/release.jks -w 0 > keystore_base64.txt
+            echo "NEW_KEYSTORE_GENERATED=true" >> $GITHUB_ENV
+          else
+            echo "Decoding existing keystore..."
+            echo "$BASE64_KEYSTORE" | base64 --decode > android-template/app/release.jks
+            echo "NEW_KEYSTORE_GENERATED=false" >> $GITHUB_ENV
+          fi
+
+          echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> $GITHUB_ENV
+          echo "KEY_ALIAS=$KEY_ALIAS" >> $GITHUB_ENV
+          echo "KEY_PASSWORD=$KEY_PASSWORD" >> $GITHUB_ENV
+
       - name: Make Gradle Wrapper Executable
         run: chmod +x android-template/gradlew
 
@@ -316,13 +339,21 @@ jobs:
           # ── Final callback ────────────────────────────────────────────────
           CALLBACK_URL=$(jq -r '.callback_url' build_config.json)
           CALLBACK_TOKEN=$(jq -r '.callback_token' build_config.json)
+          
+          # Read base64 keystore if it was generated
+          NEW_KEYSTORE_DATA=""
+          if [ "$NEW_KEYSTORE_GENERATED" == "true" ] && [ -f "keystore_base64.txt" ]; then
+            NEW_KEYSTORE_DATA=$(cat keystore_base64.txt)
+          fi
+
           curl -X POST "$CALLBACK_URL" \
             -F "build_id=$BUILD_ID" \
             -F "status=completed" \
             -F "github_run_id=${{ github.run_id }}" \
             -F "token=$CALLBACK_TOKEN" \
             -F "apk_url=$APK_URL" \
-            -F "aab_url=$AAB_URL"
+            -F "aab_url=$AAB_URL" \
+            -F "new_keystore_base64=$NEW_KEYSTORE_DATA"
 
       # ── FAILURE handler ───────────────────────────────────────────────────
       - name: Handle Workflow Failure

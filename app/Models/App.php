@@ -38,6 +38,7 @@ class App extends Model
         'enable_custom_header',
         'header_logo',
         'theme_color',
+        'keystore_data',
     ];
 
     protected $casts = [
@@ -50,6 +51,7 @@ class App extends Model
         'enable_bottom_navigation' => 'boolean',
         'enable_custom_header' => 'boolean',
         'bottom_navigation_items' => 'array',
+        'keystore_data' => 'array',
     ];
 
 

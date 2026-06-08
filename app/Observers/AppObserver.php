@@ -8,6 +8,21 @@ use App\Services\StorageService;
 class AppObserver
 {
     /**
+     * Handle the App "creating" event.
+     */
+    public function creating(App $app): void
+    {
+        if (empty($app->keystore_data)) {
+            $app->keystore_data = [
+                'key_alias' => 'upload',
+                'keystore_password' => \Illuminate\Support\Str::random(16),
+                'key_password' => \Illuminate\Support\Str::random(16),
+                'base64_keystore' => null,
+            ];
+        }
+    }
+
+    /**
      * Handle the App "deleting" event.
      * Cleans up all storage files associated with the app.
      */
