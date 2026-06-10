@@ -56,8 +56,11 @@ class AppForm
                                     ->maxLength(255)
                                     ->live(onBlur: true)
                                     ->rules([
-                                        function () {
-                                            return function (string $attribute, $value, \Closure $fail) {
+                                        function (string $context, ?\App\Models\App $record) {
+                                            return function (string $attribute, $value, \Closure $fail) use ($context, $record) {
+                                                if ($record && $record->package_name === $value) {
+                                                    return;
+                                                }
                                                 $storageService = app(\App\Services\StorageService::class);
                                                 if ($storageService->directoryExists('apps/' . $value)) {
                                                     $fail('এই প্যাকেজ নেমটি আমাদের সার্ভারে আগে থেকেই ব্যবহার করা হচ্ছে। দয়া করে অন্য নাম দিন।');

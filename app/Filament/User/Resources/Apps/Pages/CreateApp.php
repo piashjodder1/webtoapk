@@ -20,7 +20,7 @@ class CreateApp extends CreateRecord
 
     protected function hasSkippableSteps(): bool
     {
-        return true;
+        return false;
     }
 
     protected function getHeaderActions(): array
