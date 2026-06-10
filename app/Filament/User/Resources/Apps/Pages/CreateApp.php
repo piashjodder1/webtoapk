@@ -36,25 +36,12 @@ class CreateApp extends CreateRecord
     protected function getCreateFormAction(): Action
     {
         return parent::getCreateFormAction()
-            ->label('Build App')
-            ->icon('heroicon-o-rocket-launch');
-    }
-
-    protected function afterCreate(): void
-    {
-        $app = $this->record;
-
-        $build = \App\Models\Build::create([
-            'app_id' => $app->id,
-            'build_type' => 'both',
-            'build_status' => 'queued',
-        ]);
-
-        \App\Jobs\TriggerAppBuildJob::dispatch($build);
+            ->label('Create App')
+            ->icon('heroicon-m-check');
     }
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index') . '?tableAction=view_logs&tableActionRecord=' . $this->record->getKey();
+        return $this->getResource()::getUrl('index');
     }
 }

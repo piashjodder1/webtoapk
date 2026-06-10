@@ -70,6 +70,7 @@ class Settings extends Page implements HasForms
             'canonical_url',
             'google_site_verification',
             'bing_verification',
+            'default_registration_plan_id',
         ];
 
         $state = [];
@@ -233,6 +234,19 @@ class Settings extends Page implements HasForms
                                             ->visible(fn ($get) => $get('storage_driver') === 's3'),
                                     ]),
                             ]),
+
+                        Tab::make('Plans & Subscriptions')
+                            ->icon('heroicon-o-credit-card')
+                            ->schema([
+                                Grid::make(2)
+                                    ->schema([
+                                        Select::make('default_registration_plan_id')
+                                            ->label('Default Registration Plan')
+                                            ->options(\App\Models\Plan::pluck('name', 'id')->prepend('None', ''))
+                                            ->helperText('Select the default plan assigned to users automatically upon registration.')
+                                            ->nullable(),
+                                    ]),
+                            ]),
                     ])
                     ->columnSpanFull()
             ])
@@ -260,11 +274,15 @@ class Settings extends Page implements HasForms
                 $group = 'branding';
             } elseif (str_starts_with($key, 'seo_') || str_starts_with($key, 'og_') || str_starts_with($key, 'twitter_') || str_contains($key, 'verification') || str_contains($key, 'url')) {
                 $group = 'seo';
+            } elseif ($key === 'default_registration_plan_id') {
+                $group = 'plans';
             }
 
             // Save key
             if ($value !== null) {
                 Setting::set($key, $value, $group);
+            } elseif ($key === 'default_registration_plan_id') {
+                Setting::set($key, '', $group);
             }
         }
 

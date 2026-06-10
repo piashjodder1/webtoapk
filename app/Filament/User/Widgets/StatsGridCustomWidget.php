@@ -3,6 +3,7 @@
 namespace App\Filament\User\Widgets;
 
 use App\Models\App;
+use App\Models\Build;
 use Filament\Widgets\Widget;
 
 class StatsGridCustomWidget extends Widget
@@ -14,13 +15,21 @@ class StatsGridCustomWidget extends Widget
 
     protected function getViewData(): array
     {
-        $userId = auth()->id();
+        $user = auth()->user();
+        $userId = $user->id;
+        
         $totalApps = App::where('user_id', $userId)->count();
-        $totalBuilds = App::where('user_id', $userId)->where('build_status', '!=', 'pending')->count(); // Example heuristic for builds
+        $totalBuilds = Build::whereHas('app', fn ($query) => $query->where('user_id', $userId))->count();
+
+        $activeSub = $user->activeSubscription;
 
         return [
             'totalApps' => $totalApps,
             'totalBuilds' => $totalBuilds,
+            'activePlanName' => $activeSub ? $activeSub->plan->name : 'No Active Plan',
+            'remainingCredits' => $activeSub ? $activeSub->remaining_credits : 0,
+            'usedCredits' => $activeSub ? $activeSub->used_credits : 0,
+            'hasActivePlan' => (bool)$activeSub,
         ];
     }
 }

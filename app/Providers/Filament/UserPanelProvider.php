@@ -26,16 +26,10 @@ class UserPanelProvider extends PanelProvider
     {
         return $panel
             ->id('user')
-            ->path('userdashboard')
+            ->path('dashboard')
             ->profile(isSimple: false)
             ->colors([
                 'primary' => '#3B30E8',
-            ])
-            ->userMenuItems([
-                MenuItem::make()
-                    ->label('Log out')
-                    ->url(fn (): string => route('logout'))
-                    ->icon('heroicon-o-arrow-left-on-rectangle'),
             ])
             ->brandLogo(fn () => \App\Models\Setting::get('site_logo') ? asset('storage/' . \App\Models\Setting::get('site_logo')) : null)
             ->favicon(fn () => \App\Models\Setting::get('favicon') ? asset('storage/' . \App\Models\Setting::get('favicon')) : null)

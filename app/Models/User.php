@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Setting;
+use App\Models\Plan;
+use App\Models\Subscription;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -10,8 +13,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Filament\Models\Contracts\HasAvatar;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -53,6 +57,28 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         ];
     }
 
+    /**
+     * Bootstrap the model and its traits.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (User $user) {
+            $defaultPlanId = Setting::get('default_registration_plan_id');
+            if ($defaultPlanId) {
+                $plan = Plan::find($defaultPlanId);
+                if ($plan) {
+                    Subscription::create([
+                        'user_id' => $user->id,
+                        'plan_id' => $plan->id,
+                        'status' => 'active',
+                        'remaining_credits' => $plan->max_apps,
+                        'used_credits' => 0,
+                    ]);
+                }
+            }
+        });
+    }
+
 
 
     /**
@@ -81,5 +107,40 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function apps(): HasMany
     {
         return $this->hasMany(App::class);
+    }
+
+    /**
+     * Get user subscriptions.
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Get user active subscription.
+     */
+    public function activeSubscription()
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('status', 'active')
+            ->latestOfMany();
+    }
+
+    /**
+     * Check if user has active subscription and credits remaining.
+     */
+    public function hasCredits(): bool
+    {
+        $activeSub = $this->activeSubscription;
+        return $activeSub && $activeSub->remaining_credits > 0;
+    }
+
+    /**
+     * Get the custom avatar URL for Filament.
+     */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=000000&background=FFFFFF&border=1&border-color=E5E7EB';
     }
 }

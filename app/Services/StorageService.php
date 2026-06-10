@@ -52,25 +52,25 @@ class StorageService
      */
     public function uploadIcon(UploadedFile $file, string $packageName): string
     {
-        $disk = Storage::disk('public');
+        $disk = $this->getDisk();
         $filename = 'apps/' . Str::slug($packageName) . '/icon.' . $file->getClientOriginalExtension();
         $disk->put($filename, file_get_contents($file), 'public');
         return $filename;
     }
 
     /**
-     * Upload a splash screen (always stored on local public disk).
+     * Upload a splash screen.
      */
     public function uploadSplash(UploadedFile $file, string $packageName): string
     {
-        $disk = Storage::disk('public');
+        $disk = $this->getDisk();
         $filename = 'apps/' . Str::slug($packageName) . '/splash.' . $file->getClientOriginalExtension();
         $disk->put($filename, file_get_contents($file), 'public');
         return $filename;
     }
 
     /**
-     * Upload a compiled APK file (stored on configured storage disk).
+     * Upload a compiled APK file.
      */
     public function uploadApk(UploadedFile $file, string $packageName): string
     {
@@ -81,7 +81,7 @@ class StorageService
     }
 
     /**
-     * Upload a compiled AAB file (stored on configured storage disk).
+     * Upload a compiled AAB file.
      */
     public function uploadAab(UploadedFile $file, string $packageName): string
     {
@@ -98,11 +98,6 @@ class StorageService
     {
         if (!$path) {
             return null;
-        }
-
-        // App icons and splash images are always stored locally
-        if (str_starts_with($path, 'apps/') || str_starts_with($path, 'icons/') || str_starts_with($path, 'splashes/')) {
-            return asset('storage/' . ltrim($path, '/'));
         }
 
         $driver = Setting::get('storage_driver', 'local');
@@ -126,9 +121,6 @@ class StorageService
      */
     public function delete(string $path): bool
     {
-        if (str_starts_with($path, 'apps/') || str_starts_with($path, 'icons/') || str_starts_with($path, 'splashes/')) {
-            return Storage::disk('public')->delete($path);
-        }
         return $this->getDisk()->delete($path);
     }
 
@@ -137,9 +129,6 @@ class StorageService
      */
     public function deleteDirectory(string $directory): bool
     {
-        if (str_starts_with($directory, 'apps/') || str_starts_with($directory, 'icons/') || str_starts_with($directory, 'splashes/')) {
-            return Storage::disk('public')->deleteDirectory($directory);
-        }
         return $this->getDisk()->deleteDirectory($directory);
     }
 }

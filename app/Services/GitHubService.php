@@ -46,6 +46,13 @@ class GitHubService
         $storageService = new StorageService();
         $iconUrl = $app->icon_path ? $storageService->getUrl($app->icon_path) : '';
         $splashUrl = $app->splash_path ? $storageService->getUrl($app->splash_path) : '';
+        $headerLogoUrl = $app->header_logo ? $storageService->getUrl($app->header_logo) : '';
+
+        // Prevent caching in GitHub Actions / Android Build
+        $timestamp = time();
+        if ($iconUrl) $iconUrl .= (str_contains($iconUrl, '?') ? '&' : '?') . 'v=' . $timestamp;
+        if ($splashUrl) $splashUrl .= (str_contains($splashUrl, '?') ? '&' : '?') . 'v=' . $timestamp;
+        if ($headerLogoUrl) $headerLogoUrl .= (str_contains($headerLogoUrl, '?') ? '&' : '?') . 'v=' . $timestamp;
 
         $url = "https://api.github.com/repos/{$this->repository}/actions/workflows/{$this->workflowId}/dispatches";
 
@@ -66,7 +73,7 @@ class GitHubService
             'enable_bottom_navigation' => $app->enable_bottom_navigation ? 'true' : 'false',
             'bottom_navigation_items' => $app->bottom_navigation_items ? json_encode($app->bottom_navigation_items) : '[]',
             'enable_custom_header' => $app->enable_custom_header ? 'true' : 'false',
-            'header_logo_url' => $app->header_logo ? $storageService->getUrl($app->header_logo) : '',
+            'header_logo_url' => $headerLogoUrl,
             'onesignal_app_id' => $app->onesignal_app_id ?? '',
             'theme_color' => $app->theme_color ?? '#FFFFFF',
             'version_name' => $app->version_name ?? '1.0.0',

@@ -85,7 +85,7 @@ class AppsTable
                             Select::make('build_type')
                                 ->label('Build Format')
                                 ->options([
-                                    'apk' => 'Android APK (Testing)',
+                                    'apk' => 'Android APK (Release)',
                                     'aab' => 'Android App Bundle - AAB (Play Store)',
                                     'both' => 'Build Both APK & AAB',
                                 ])
@@ -110,41 +110,17 @@ class AppsTable
                                 ->body('The Android build job has been added to queue.')
                                 ->success()
                                 ->send();
+
+                            return redirect(\App\Filament\Resources\Apps\Pages\DownloadAppPage::getUrl(['record' => $record->id]));
                         }),
 
-                    // Download APK
-                    Action::make('download_apk')
-                        ->label('Download APK')
+                    // Download Page
+                    Action::make('download_page')
+                        ->label('Download')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('info')
-                        ->url(fn (App $record) => $record->apk_url)
-                        ->openUrlInNewTab()
-                        ->visible(fn (App $record) => !empty($record->apk_url) && $record->build_status === 'completed'),
-
-                    // Download AAB
-                    Action::make('download_aab')
-                        ->label('Download AAB')
-                        ->icon('heroicon-o-arrow-down-tray')
-                        ->color('primary')
-                        ->url(fn (App $record) => $record->aab_url)
-                        ->openUrlInNewTab()
-                        ->visible(fn (App $record) => !empty($record->aab_url) && $record->build_status === 'completed'),
-
-                    // View Build Logs
-                    Action::make('view_logs')
-                        ->label('View Build Logs')
-                        ->icon('heroicon-o-document-text')
-                        ->color('gray')
-                        ->modalHeading('Latest Build Status & Logs')
-                        ->modalDescription(fn (App $record) => "Status and logs for app: {$record->app_name}")
-                        ->modalContent(function (App $record) {
-                            $latestBuild = $record->latestBuild;
-                            if (!$latestBuild) {
-                                return view('filament.components.build-logs-empty');
-                            }
-                            return view('filament.components.build-logs', ['build' => $latestBuild]);
-                        })
-                        ->visible(fn (App $record) => $record->latestBuild()->exists()),
+                        ->url(fn (App $record) => \App\Filament\Resources\Apps\Pages\DownloadAppPage::getUrl(['record' => $record->id]))
+                        ->visible(fn (App $record) => in_array($record->build_status, ['queued', 'building', 'completed'])),
                 ])
             ])
             ->bulkActions([

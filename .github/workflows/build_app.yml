@@ -75,29 +75,29 @@ jobs:
       - name: Process Icon, Package Name, and App Label
         run: |
           python3 - << 'EOF'
-          import os, re, urllib.request, json
+          import os, re, subprocess, json
           from PIL import Image
 
           config = json.load(open("build_config.json"))
 
           icon_url = config.get("icon_url", "")
+          splash_url = config.get("splash_url", "")
           app_name = config.get("app_name", "")
           package_name = config.get("package_name", "")
           version_name = config.get("version_name", "1.0.0")
           version_code = config.get("version_code", "1")
 
           # ── 1. Icon Download and Resizing ──
+          os.makedirs("android-template/app/src/main/assets", exist_ok=True)
+          icon_tmp = "/tmp/app_icon_original.png"
+          
           if icon_url:
               try:
                   print(f"Downloading icon from {icon_url}...")
-                  icon_tmp = "/tmp/app_icon_original.png"
-                  urllib.request.urlretrieve(icon_url, icon_tmp)
+                  subprocess.run(["curl", "-sSL", "-H", "Cache-Control: no-cache, no-store, must-revalidate", "-A", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", "-o", icon_tmp, icon_url], check=True)
                   print("Icon downloaded successfully.")
 
-                  # Save to Assets for Splash Activity fallback
-                  im = Image.open(icon_tmp)
-                  os.makedirs("android-template/app/src/main/assets", exist_ok=True)
-                  im.save("android-template/app/src/main/assets/logo.png")
+                  im = Image.open(icon_tmp).convert("RGBA")
 
                   # Resize to mipmaps (standard and round)
                   sizes = {
@@ -108,20 +108,19 @@ jobs:
                       "mipmap-xxxhdpi": 192
                   }
                   for folder, size in sizes.items():
-                      # Standard launcher icon
                       dest = f"android-template/app/src/main/res/{folder}/ic_launcher.png"
                       os.makedirs(os.path.dirname(dest), exist_ok=True)
                       resampling = Image.Resampling.LANCZOS if hasattr(Image, 'Resampling') else Image.LANCZOS
                       resized = im.resize((size, size), resampling)
-                      resized.save(dest)
+                      resized.save(dest, format="PNG")
                       
-                      # Round launcher icon
                       dest_round = f"android-template/app/src/main/res/{folder}/ic_launcher_round.png"
-                      resized.save(dest_round)
+                      resized.save(dest_round, format="PNG")
                       
-                      # OneSignal default icon (transparent background is better, but this will do)
-                      dest_onesignal = f"android-template/app/src/main/res/{folder}/ic_stat_onesignal_default.png"
-                      resized.save(dest_onesignal)
+                      # OneSignal default icon (needs transparent background)
+                      dest_onesignal = f"android-template/app/src/main/res/drawable-{folder.split('-')[1]}/ic_stat_onesignal_default.png"
+                      os.makedirs(os.path.dirname(dest_onesignal), exist_ok=True)
+                      resized.save(dest_onesignal, format="PNG")
                       
                       print(f"  Generated standard, round, and onesignal icons for {folder} ({size}x{size}px)")
                   print("All launcher icons processed.")
@@ -129,6 +128,25 @@ jobs:
                   print(f"Warning: Icon processing failed: {e}. Using default template icon.")
           else:
               print("No icon URL provided, using default template icon.")
+
+          # ── 1.5 Splash Screen Download ──
+          splash_tmp = "/tmp/app_splash_original.png"
+          if splash_url:
+              try:
+                  print(f"Downloading splash screen from {splash_url}...")
+                  subprocess.run(["curl", "-sSL", "-H", "Cache-Control: no-cache, no-store, must-revalidate", "-A", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", "-o", splash_tmp, splash_url], check=True)
+                  print("Splash downloaded successfully.")
+                  
+                  im_splash = Image.open(splash_tmp).convert("RGBA")
+                  im_splash.save("android-template/app/src/main/assets/logo.png", format="PNG")
+              except Exception as e:
+                  print(f"Warning: Splash processing failed: {e}. Fallback to icon.")
+                  if os.path.exists(icon_tmp):
+                      Image.open(icon_tmp).convert("RGBA").save("android-template/app/src/main/assets/logo.png", format="PNG")
+          else:
+              print("No splash URL provided. Fallback to icon.")
+              if os.path.exists(icon_tmp):
+                  Image.open(icon_tmp).convert("RGBA").save("android-template/app/src/main/assets/logo.png", format="PNG")
 
           # ── 2. Resource App Name Edit ──
           # Update label in strings.xml

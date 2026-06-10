@@ -54,13 +54,13 @@ class AppForm
                 ->schema([
                     FileUpload::make('icon_path')
                         ->extraAttributes(['accept' => 'image/*'])
-                        ->disk('public')
+                        ->disk(fn () => \App\Models\Setting::get('storage_driver', 'local') !== 'local' ? 'cloud_dynamic' : 'public')
                         ->directory('icons')
                         ->label('App Icon'),
 
                     FileUpload::make('splash_path')
                         ->extraAttributes(['accept' => 'image/*'])
-                        ->disk('public')
+                        ->disk(fn () => \App\Models\Setting::get('storage_driver', 'local') !== 'local' ? 'cloud_dynamic' : 'public')
                         ->directory('splashes')
                         ->label('Splash Screen'),
                         
@@ -126,7 +126,7 @@ class AppForm
                             FileUpload::make('header_logo')
                                 ->label('Header Logo')
                                 ->extraAttributes(['accept' => 'image/*'])
-                                ->disk('public')
+                                ->disk(fn () => \App\Models\Setting::get('storage_driver', 'local') !== 'local' ? 'cloud_dynamic' : 'public')
                                 ->directory('headers')
                                 ->helperText('Upload a logo to show in the app header')
                                 ->visible(fn ($get) => $get('enable_custom_header')),

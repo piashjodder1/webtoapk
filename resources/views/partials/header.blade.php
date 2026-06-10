@@ -13,7 +13,7 @@
     <div class="nav-actions">
       @if (Route::has('login'))
           @auth
-              <a href="{{ url('/userdashboard') }}">
+              <a href="{{ url('/dashboard') }}">
                   <img src="{{ \Filament\Facades\Filament::getUserAvatarUrl(auth()->user()) }}" alt="Avatar" style="height: 36px; width: 36px; border-radius: 50%; border: 2px solid var(--primary-pale);">
               </a>
           @else

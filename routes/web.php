@@ -33,7 +33,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
         $request->fulfill();
-        return redirect('/userdashboard');
+        return redirect('/dashboard');
     })->middleware('signed')->name('verification.verify');
 
     Route::post('/email/verification-notification', function (Request $request) {
@@ -41,5 +41,12 @@ Route::middleware('auth')->group(function () {
         return back()->with('status', 'verification-link-sent');
     })->middleware('throttle:6,1')->name('verification.send');
 
-
+    // UddoktaPay / Automated Gateway Routes
+    Route::get('/payment/checkout/{plan}/{gateway}', [\App\Http\Controllers\PaymentController::class, 'checkout'])->name('payment.checkout');
+    Route::any('/payment/success/{gateway}', [\App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
+    Route::any('/payment/cancel/{gateway}', [\App\Http\Controllers\PaymentController::class, 'cancel'])->name('payment.cancel');
 });
+
+// Webhook route must be outside the 'auth' middleware and CSRF protected area 
+// since it receives a POST request from an external server.
+Route::post('/payment/webhook/{gateway}', [\App\Http\Controllers\PaymentController::class, 'webhook'])->name('payment.webhook');

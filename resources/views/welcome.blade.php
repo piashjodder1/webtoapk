@@ -33,7 +33,7 @@
 
   <div class="hero-actions fade-up delay-3">
     @auth
-        <a href="{{ url('/userdashboard') }}" class="btn-hero btn-hero-primary" style="text-decoration:none;">
+        <a href="{{ url('/dashboard') }}" class="btn-hero btn-hero-primary" style="text-decoration:none;">
             Go to Dashboard
         </a>
     @else
@@ -152,7 +152,7 @@
     <h2>Ready to Build Your App?</h2>
     <p>Enter your website URL and get a native Android app in minutes.</p>
     @auth
-        <a href="{{ url('/userdashboard') }}" class="btn-cta" style="text-decoration:none;">
+        <a href="{{ url('/dashboard') }}" class="btn-cta" style="text-decoration:none;">
             Go to Dashboard
         </a>
     @else

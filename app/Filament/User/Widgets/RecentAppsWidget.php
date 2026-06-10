@@ -68,11 +68,19 @@ class RecentAppsWidget extends BaseWidget
                         ->label(fn (App $record) => $record->build_status === 'completed' ? 'Rebuild App' : 'Build App')
                         ->icon('heroicon-o-rocket-launch')
                         ->color('success')
+                        ->tooltip(fn () => ! auth()->user()->hasCredits() ? 'No build credits remaining. Click to buy a plan.' : null)
+                        ->url(function (App $record) {
+                            if (! auth()->user()->hasCredits()) {
+                                session()->flash('error', 'You do not have enough credits to build this app. Please buy a plan.');
+                                return \App\Filament\User\Pages\PlansPage::getUrl();
+                            }
+                            return null;
+                        })
                         ->form([
                             Select::make('build_type')
                                 ->label('Build Format')
                                 ->options([
-                                    'apk' => 'Android APK (Testing)',
+                                    'apk' => 'Android APK (Release)',
                                     'aab' => 'Android App Bundle - AAB (Play Store)',
                                     'both' => 'Build Both APK & AAB',
                                 ])
@@ -80,6 +88,15 @@ class RecentAppsWidget extends BaseWidget
                                 ->required(),
                         ])
                         ->action(function (App $record, array $data) {
+                            if (! auth()->user()->hasCredits()) {
+                                Notification::make()
+                                    ->title('No Credits Remaining')
+                                    ->body('You do not have enough credits to build this app. Please buy a plan.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+
                             $build = Build::create([
                                 'app_id' => $record->id,
                                 'build_type' => $data['build_type'],
@@ -92,23 +109,17 @@ class RecentAppsWidget extends BaseWidget
                                 ->body('The Android build job has been added to queue.')
                                 ->success()
                                 ->send();
+
+                            return redirect(\App\Filament\User\Resources\Apps\Pages\DownloadAppPage::getUrl(['record' => $record->id]));
                         }),
 
-                    Action::make('download_apk')
-                        ->label('Download APK')
+                    // Download Page
+                    Action::make('download_page')
+                        ->label('Download')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('info')
-                        ->url(fn (App $record) => $record->apk_url)
-                        ->openUrlInNewTab()
-                        ->visible(fn (App $record) => !empty($record->apk_url) && $record->build_status === 'completed'),
-
-                    Action::make('download_aab')
-                        ->label('Download AAB')
-                        ->icon('heroicon-o-arrow-down-tray')
-                        ->color('primary')
-                        ->url(fn (App $record) => $record->aab_url)
-                        ->openUrlInNewTab()
-                        ->visible(fn (App $record) => !empty($record->aab_url) && $record->build_status === 'completed'),
+                        ->url(fn (App $record) => \App\Filament\User\Resources\Apps\Pages\DownloadAppPage::getUrl(['record' => $record->id]))
+                        ->visible(fn (App $record) => in_array($record->build_status, ['queued', 'building', 'completed'])),
                 ])
             ]);
     }

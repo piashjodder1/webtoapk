@@ -47,6 +47,7 @@ class AppResource extends Resource
             'index' => ListApps::route('/'),
             'create' => CreateApp::route('/create'),
             'edit' => EditApp::route('/{record}/edit'),
+            'download' => \App\Filament\User\Resources\Apps\Pages\DownloadAppPage::route('/{record}/download'),
         ];
     }
 

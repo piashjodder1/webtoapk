@@ -36,30 +36,8 @@ class EditApp extends EditRecord
         ];
     }
 
-    protected function getSaveFormAction(): Action
-    {
-        return parent::getSaveFormAction()
-            ->label('Rebuild App')
-            ->icon('heroicon-o-rocket-launch');
-    }
-
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index') . '?tableAction=view_logs&tableActionRecord=' . $this->record->getKey();
-    }
-
-    protected function afterSave(): void
-    {
-        $app = $this->record;
-
-        $build = \App\Models\Build::create([
-            'app_id' => $app->id,
-            'build_type' => 'both',
-            'build_status' => 'queued',
-        ]);
-
-        $app->update(['build_status' => 'queued']);
-
-        \App\Jobs\TriggerAppBuildJob::dispatch($build);
+        return $this->getResource()::getUrl('index');
     }
 }
