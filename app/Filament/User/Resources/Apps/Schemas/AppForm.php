@@ -43,9 +43,11 @@ class AppForm
                         ->label('Website URL'),
 
                     TextInput::make('package_name')
-                        ->required()
-                        ->regex('/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+[0-9a-z_]$/i')
                         ->label('Package Name')
+                        ->required()
+                        ->unique('apps', 'package_name', ignoreRecord: true)
+                        ->regex('/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+[0-9a-z_]$/i')
+                        ->maxLength(255)
                         ->columnSpanFull(),
                 ]),
 
@@ -55,13 +57,13 @@ class AppForm
                     FileUpload::make('icon_path')
                         ->extraAttributes(['accept' => 'image/*'])
                         ->disk(fn () => \App\Models\Setting::get('storage_driver', 'local') !== 'local' ? 'cloud_dynamic' : 'public')
-                        ->directory('icons')
+                        ->directory(fn (?App $record) => $record ? 'apps/' . $record->package_name . '/branding' : 'temp-branding')
                         ->label('App Icon'),
 
                     FileUpload::make('splash_path')
                         ->extraAttributes(['accept' => 'image/*'])
                         ->disk(fn () => \App\Models\Setting::get('storage_driver', 'local') !== 'local' ? 'cloud_dynamic' : 'public')
-                        ->directory('splashes')
+                        ->directory(fn (?App $record) => $record ? 'apps/' . $record->package_name . '/branding' : 'temp-branding')
                         ->label('Splash Screen'),
                         
                     ColorPicker::make('theme_color')
@@ -127,7 +129,7 @@ class AppForm
                                 ->label('Header Logo')
                                 ->extraAttributes(['accept' => 'image/*'])
                                 ->disk(fn () => \App\Models\Setting::get('storage_driver', 'local') !== 'local' ? 'cloud_dynamic' : 'public')
-                                ->directory('headers')
+                                ->directory(fn (?App $record) => $record ? 'apps/' . $record->package_name . '/branding' : 'temp-branding')
                                 ->helperText('Upload a logo to show in the app header')
                                 ->visible(fn ($get) => $get('enable_custom_header')),
                         ]),

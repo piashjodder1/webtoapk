@@ -131,4 +131,12 @@ class StorageService
     {
         return $this->getDisk()->deleteDirectory($directory);
     }
+
+    /**
+     * Move a file.
+     */
+    public function move(string $oldPath, string $newPath): bool
+    {
+        return $this->getDisk()->move($oldPath, $newPath);
+    }
 }
