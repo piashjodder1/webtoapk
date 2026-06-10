@@ -139,4 +139,13 @@ class StorageService
     {
         return $this->getDisk()->move($oldPath, $newPath);
     }
+
+    /**
+     * Check if a directory exists (by checking if it contains files or subdirectories).
+     */
+    public function directoryExists(string $directory): bool
+    {
+        $disk = $this->getDisk();
+        return count($disk->files($directory)) > 0 || count($disk->directories($directory)) > 0;
+    }
 }

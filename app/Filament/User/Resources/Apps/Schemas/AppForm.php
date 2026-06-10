@@ -35,7 +35,14 @@ class AppForm
                     TextInput::make('app_name')
                         ->required()
                         ->maxLength(255)
-                        ->label('App Name'),
+                        ->label('App Name')
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function ($set, $state, $context, $get) {
+                            if ($context === 'create' && $state && empty($get('package_name'))) {
+                                $slug = \Illuminate\Support\Str::slug($state, '');
+                                $set('package_name', 'com.app.' . ($slug ?: 'name'));
+                            }
+                        }),
 
                     TextInput::make('website_url')
                         ->required()
@@ -48,6 +55,17 @@ class AppForm
                         ->unique('apps', 'package_name', ignoreRecord: true)
                         ->regex('/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+[0-9a-z_]$/i')
                         ->maxLength(255)
+                        ->live(onBlur: true)
+                        ->rules([
+                            function () {
+                                return function (string $attribute, $value, \Closure $fail) {
+                                    $storageService = app(\App\Services\StorageService::class);
+                                    if ($storageService->directoryExists('apps/' . $value)) {
+                                        $fail('এই প্যাকেজ নেমের ফোল্ডারটি আমাদের সার্ভারে আগে থেকেই আছে। দয়া করে অন্য প্যাকেজ নেম দিন।');
+                                    }
+                                };
+                            },
+                        ])
                         ->columnSpanFull(),
                 ]),
 
