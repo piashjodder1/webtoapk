@@ -60,26 +60,43 @@ class TriggerAppBuildJob implements ShouldQueue
             ]);
         }
 
-        // Trigger GitHub Actions run — re-throw on failure so queue can retry
-        $success = $githubService->triggerBuild($app, $build);
-
-        if (!$success) {
+        try {
+            // Trigger GitHub Actions run
+            $success = $githubService->triggerBuild($app, $build);
+            
+            if (!$success) {
+                throw new \RuntimeException('GitHub Service returned false.');
+            }
+            
+            Log::info("GitHub workflow dispatch succeeded for build #{$build->id}");
+        } catch (\RuntimeException $e) {
+            $errorMsg = $e->getMessage();
+            
+            // Permanent errors (401, 404, etc.) - do not retry
+            if (str_contains($errorMsg, 'Bad credentials') || str_contains($errorMsg, 'Not Found')) {
+                Log::error("Permanent GitHub Configuration Error for build #{$build->id}: {$errorMsg}");
+                $build->update([
+                    'build_status' => 'failed', 
+                    'build_log' => "GitHub Setup Error: The GitHub token is invalid or the repository does not exist. Please check your Admin Settings.\n\nDetails: " . $errorMsg
+                ]);
+                $app->update(['build_status' => 'failed']);
+                return;
+            }
+            
             $log = Setting::get('github_token') && Setting::get('github_repository')
-                ? 'GitHub API rejected the request. Check your token has "workflow" scope and the repository exists.'
+                ? 'GitHub API rejected the request. Check your token has "workflow" scope.'
                 : 'GitHub settings not configured. Go to Admin > Settings and set GitHub Token and Repository.';
 
-            Log::error("GitHub workflow dispatch failed for build #{$build->id}");
+            Log::error("GitHub workflow dispatch failed for build #{$build->id}: {$errorMsg}");
 
             // Only mark as failed on final attempt, otherwise let the job retry
             if ($this->attempts() >= $this->tries) {
-                $build->update(['build_status' => 'failed', 'build_log' => $log]);
+                $build->update(['build_status' => 'failed', 'build_log' => $log . "\n" . $errorMsg]);
                 $app->update(['build_status' => 'failed']);
             } else {
-                // Re-throw a generic exception to trigger retry
-                throw new \RuntimeException($log);
+                // Re-throw to trigger retry
+                throw $e;
             }
-        } else {
-            Log::info("GitHub workflow dispatch succeeded for build #{$build->id}");
         }
     }
 
