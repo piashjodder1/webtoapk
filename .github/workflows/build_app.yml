@@ -239,6 +239,7 @@ jobs:
       # ── STEP 4: Build APK and AAB ─────────────────────────────────────────
       - name: Build APK (Release)
         run: |
+          set -o pipefail
           BUILD_TYPE=$(jq -r '.build_type' build_config.json)
           if [ "$BUILD_TYPE" = "apk" ] || [ "$BUILD_TYPE" = "both" ]; then
             cd android-template
@@ -264,6 +265,7 @@ jobs:
 
       - name: Build AAB (Release)
         run: |
+          set -o pipefail
           BUILD_TYPE=$(jq -r '.build_type' build_config.json)
           if [ "$BUILD_TYPE" = "aab" ] || [ "$BUILD_TYPE" = "both" ]; then
             cd android-template
