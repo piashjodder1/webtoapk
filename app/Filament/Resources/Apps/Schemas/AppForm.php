@@ -195,12 +195,14 @@ class AppForm
                                     ->label('Keystore Password')
                                     ->password()
                                     ->revealable()
+                                    ->dehydrated(fn ($state) => filled($state))
                                     ->helperText('Leave empty to auto-generate a secure password.'),
 
                                 TextInput::make('keystore_data.key_password')
                                     ->label('Key Password')
                                     ->password()
                                     ->revealable()
+                                    ->dehydrated(fn ($state) => filled($state))
                                     ->helperText('Leave empty to auto-generate a secure password.'),
                             ]),
             ]);
