@@ -247,7 +247,7 @@ jobs:
           if [ "$BUILD_TYPE" = "apk" ] || [ "$BUILD_TYPE" = "both" ]; then
             cd android-template
             rm -rf app/build/outputs/apk/release/*
-            ./gradlew assembleRelease -x lint -x lintVitalRelease --stacktrace 2>&1 | tee ../build_output.log
+            ./gradlew assembleRelease --stacktrace 2>&1 | tee ../build_output.log
           fi
 
       - name: Rename APK output
@@ -274,7 +274,7 @@ jobs:
           if [ "$BUILD_TYPE" = "aab" ] || [ "$BUILD_TYPE" = "both" ]; then
             cd android-template
             rm -rf app/build/outputs/bundle/release/*
-            ./gradlew bundleRelease -x lint -x lintVitalRelease --stacktrace 2>&1 | tee -a ../build_output.log
+            ./gradlew bundleRelease --stacktrace 2>&1 | tee -a ../build_output.log
           fi
 
       - name: Rename AAB output
