@@ -67,13 +67,7 @@ jobs:
           print('config.json written:');
           print(open('android-template/app/src/main/assets/config.json').read())"
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-          cache: 'pip'
-
-      - name: Install Python dependencies
+      - name: Install Python Pillow
         run: |
           python3 -m pip install Pillow --break-system-packages
 
