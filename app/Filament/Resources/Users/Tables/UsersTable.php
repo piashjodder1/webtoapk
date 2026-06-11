@@ -13,7 +13,19 @@ class UsersTable
     {
         return $table
             ->columns([
-                //
+                \Filament\Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                \Filament\Tables\Columns\TextColumn::make('email')
+                    ->searchable()
+                    ->sortable(),
+                \Filament\Tables\Columns\IconColumn::make('is_suspended')
+                    ->boolean()
+                    ->sortable(),
+                \Filament\Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
