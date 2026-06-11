@@ -220,6 +220,8 @@ jobs:
           if [ -z "$BASE64_KEYSTORE" ] || [ "$BASE64_KEYSTORE" == "null" ]; then
             echo "Generating new keystore..."
             rm -f android-template/app/release.jks
+            # PKCS12 requires storepass and keypass to be identical.
+            KEY_PASSWORD="$KEYSTORE_PASSWORD"
             keytool -genkey -v -keystore android-template/app/release.jks -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" -dname "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown"
             # Base64 encode it and save to a file
             base64 android-template/app/release.jks -w 0 > keystore_base64.txt

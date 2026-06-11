@@ -52,11 +52,10 @@ class TriggerAppBuildJob implements ShouldQueue
         $keystoreData = $app->keystore_data ?? [];
         $keystoreData['key_alias'] = 'release';
         if (empty($keystoreData['base64_keystore'])) {
-            if (empty($keystoreData['keystore_password'])) {
-                $keystoreData['keystore_password'] = \Illuminate\Support\Str::random(16);
-            }
-            if (empty($keystoreData['key_password'])) {
-                $keystoreData['key_password'] = \Illuminate\Support\Str::random(16);
+            if (empty($keystoreData['keystore_password']) || empty($keystoreData['key_password'])) {
+                $pwd = \Illuminate\Support\Str::random(16);
+                $keystoreData['keystore_password'] = $pwd;
+                $keystoreData['key_password'] = $pwd;
             }
         }
         $app->update(['keystore_data' => $keystoreData]);
