@@ -86,6 +86,7 @@ jobs:
           package_name = config.get("package_name", "")
           version_name = config.get("version_name", "1.0.0")
           version_code = config.get("version_code", "1")
+          theme_color = config.get("theme_color", "#4F46E5")
 
           # ── 1. Icon Download and Resizing ──
           os.makedirs("android-template/app/src/main/assets", exist_ok=True)
@@ -171,6 +172,16 @@ jobs:
               print(f"Gradle applicationId updated → {package_name}")
               print(f"Gradle versionName updated → {version_name}")
               print(f"Gradle versionCode updated → {version_code}")
+
+          # ── 4. Theme Color Edit ──
+          colors_path = "android-template/app/src/main/res/values/colors.xml"
+          if os.path.exists(colors_path):
+              c = open(colors_path).read()
+              c = re.sub(r'<color name="primary">.*?</color>', f'<color name="primary">{theme_color}</color>', c)
+              c = re.sub(r'<color name="primary_dark">.*?</color>', f'<color name="primary_dark">{theme_color}</color>', c)
+              c = re.sub(r'<color name="accent">.*?</color>', f'<color name="accent">{theme_color}</color>', c)
+              open(colors_path, 'w').write(c)
+              print(f"colors.xml updated with theme color → {theme_color}")
           EOF
 
       # ── Set up JDK 17 & Gradle ──────────────────────────────────────────
