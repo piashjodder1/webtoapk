@@ -182,30 +182,23 @@ class AppForm
                 ]),
 
             Step::make('Keystore Data')
-                ->description('Advanced: Provide your own keystore credentials or leave empty to auto-generate')
+                ->description('Provide your passwords or leave empty to auto-generate')
                 ->columns(2)
                 ->schema([
-                    TextInput::make('keystore_data.key_alias')
-                        ->label('Key Alias')
-                        ->placeholder('upload')
-                        ->helperText('Leave empty to auto-generate.'),
+                    Hidden::make('keystore_data.key_alias')
+                        ->default('release'),
 
                     TextInput::make('keystore_data.keystore_password')
                         ->label('Keystore Password')
                         ->password()
                         ->revealable()
-                        ->helperText('Leave empty to auto-generate.'),
+                        ->helperText('Leave empty to auto-generate a secure password.'),
 
                     TextInput::make('keystore_data.key_password')
                         ->label('Key Password')
                         ->password()
                         ->revealable()
-                        ->helperText('Leave empty to auto-generate.'),
-
-                    Textarea::make('keystore_data.base64_keystore')
-                        ->label('Keystore (Base64)')
-                        ->columnSpanFull()
-                        ->helperText('Paste a base64 encoded .jks file, or leave empty to auto-generate.'),
+                        ->helperText('Leave empty to auto-generate a secure password.'),
                 ]),
         ];
     }

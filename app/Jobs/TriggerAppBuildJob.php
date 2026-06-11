@@ -49,16 +49,15 @@ class TriggerAppBuildJob implements ShouldQueue
         $build->update(['build_status' => 'building']);
         $app->update(['build_status' => 'building']);
 
-        if (empty($app->keystore_data)) {
-            $app->update([
-                'keystore_data' => [
-                    'key_alias' => 'upload',
-                    'keystore_password' => \Illuminate\Support\Str::random(16),
-                    'key_password' => \Illuminate\Support\Str::random(16),
-                    'base64_keystore' => null,
-                ]
-            ]);
+        $keystoreData = $app->keystore_data ?? [];
+        $keystoreData['key_alias'] = 'release';
+        if (empty($keystoreData['keystore_password'])) {
+            $keystoreData['keystore_password'] = \Illuminate\Support\Str::random(16);
         }
+        if (empty($keystoreData['key_password'])) {
+            $keystoreData['key_password'] = \Illuminate\Support\Str::random(16);
+        }
+        $app->update(['keystore_data' => $keystoreData]);
 
         try {
             // Trigger GitHub Actions run

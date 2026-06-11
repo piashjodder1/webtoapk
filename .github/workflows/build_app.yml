@@ -370,7 +370,23 @@ jobs:
             echo "AAB URL: $AAB_URL"
           fi
 
-          # ── Final callback ────────────────────────────────────────────────
+          # ── KEYSTORE DETAILS ─────────────────────────────────────────────
+          if [ "$NEW_KEYSTORE_GENERATED" == "true" ] && [ -n "$R2_KEY" ] && [ "$R2_KEY" != "null" ]; then
+             echo "Alias: $KEY_ALIAS" > keystore_credentials.txt
+             echo "Keystore Password: $KEYSTORE_PASSWORD" >> keystore_credentials.txt
+             echo "Key Password: $KEY_PASSWORD" >> keystore_credentials.txt
+             
+             aws s3 cp android-template/app/release.jks "s3://$R2_BUCKET/apps/$PKG_NAME/keydetails/release.jks" --endpoint-url "$R2_ENDPOINT" 2>&1 || true
+             aws s3 cp keystore_credentials.txt "s3://$R2_BUCKET/apps/$PKG_NAME/keydetails/credentials.txt" --endpoint-url "$R2_ENDPOINT" 2>&1 || true
+             echo "Keystore details uploaded to R2."
+             
+             # Pass URLs back to callback
+             PUBLIC_URL="$R2_PUBLIC_URL"
+             KEYSTORE_URL="${PUBLIC_URL%/}/apps/$PKG_NAME/keydetails/release.jks"
+             CREDENTIALS_URL="${PUBLIC_URL%/}/apps/$PKG_NAME/keydetails/credentials.txt"
+          fi
+          
+          # ── SEND CALLBACK ────────────────────────────────────────────────
           CALLBACK_URL=$(jq -r '.callback_url' build_config.json)
           CALLBACK_TOKEN=$(jq -r '.callback_token' build_config.json)
           
@@ -380,14 +396,19 @@ jobs:
             NEW_KEYSTORE_DATA=$(cat keystore_base64.txt)
           fi
 
-          curl -X POST "$CALLBACK_URL" \
-            -F "build_id=$BUILD_ID" \
-            -F "status=completed" \
-            -F "github_run_id=${{ github.run_id }}" \
-            -F "token=$CALLBACK_TOKEN" \
-            -F "apk_url=$APK_URL" \
-            -F "aab_url=$AAB_URL" \
-            -F "new_keystore_base64=$NEW_KEYSTORE_DATA"
+          if [ -n "$CALLBACK_URL" ] && [ "$CALLBACK_URL" != "null" ]; then
+            echo "Sending callback to $CALLBACK_URL"
+            curl -X POST "$CALLBACK_URL" \
+              -F "build_id=$BUILD_ID" \
+              -F "status=completed" \
+              -F "github_run_id=${{ github.run_id }}" \
+              -F "token=$CALLBACK_TOKEN" \
+              -F "apk_url=$APK_URL" \
+              -F "aab_url=$AAB_URL" \
+              -F "keystore_url=${KEYSTORE_URL:-}" \
+              -F "credentials_url=${CREDENTIALS_URL:-}" \
+              -F "new_keystore_base64=$NEW_KEYSTORE_DATA" || true
+          fi
 
       # ── FAILURE handler ───────────────────────────────────────────────────
       - name: Handle Workflow Failure
