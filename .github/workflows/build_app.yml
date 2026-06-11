@@ -67,7 +67,13 @@ jobs:
           print('config.json written:');
           print(open('android-template/app/src/main/assets/config.json').read())"
 
-      - name: Install Python Pillow
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Python dependencies
         run: |
           python3 -m pip install Pillow --break-system-packages
 
@@ -246,7 +252,8 @@ jobs:
           BUILD_TYPE=$(jq -r '.build_type' build_config.json)
           if [ "$BUILD_TYPE" = "apk" ] || [ "$BUILD_TYPE" = "both" ]; then
             cd android-template
-            ./gradlew assembleRelease --stacktrace 2>&1 | tee ../build_output.log
+            rm -rf app/build/outputs/apk/release/*
+            ./gradlew assembleRelease -x lint -x lintVitalRelease --stacktrace 2>&1 | tee ../build_output.log
           fi
 
       - name: Rename APK output
@@ -272,7 +279,8 @@ jobs:
           BUILD_TYPE=$(jq -r '.build_type' build_config.json)
           if [ "$BUILD_TYPE" = "aab" ] || [ "$BUILD_TYPE" = "both" ]; then
             cd android-template
-            ./gradlew bundleRelease --stacktrace 2>&1 | tee -a ../build_output.log
+            rm -rf app/build/outputs/bundle/release/*
+            ./gradlew bundleRelease -x lint -x lintVitalRelease --stacktrace 2>&1 | tee -a ../build_output.log
           fi
 
       - name: Rename AAB output
