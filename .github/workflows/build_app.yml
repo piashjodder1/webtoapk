@@ -325,7 +325,7 @@ jobs:
           R2_PUBLIC_URL=$(jq -r '.r2_public_url' build_config.json)
 
           # ── APK ──────────────────────────────────────────────────────────
-          APK_FILE=$(ls android-template/app/build/outputs/apk/release/*.apk 2>/dev/null | head -n 1)
+          APK_FILE=$(find android-template/app/build -type f -name "*.apk" | grep -i release | head -n 1)
           if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
             if [ -n "$R2_KEY" ] && [ "$R2_KEY" != "null" ]; then
               R2_KEY_FILE="apps/$PKG_NAME/build/apk/${APP_SAFE_NAME}-release-${BUILD_ID}.apk"
@@ -348,7 +348,7 @@ jobs:
           fi
 
           # ── AAB ──────────────────────────────────────────────────────────
-          AAB_FILE=$(ls android-template/app/build/outputs/bundle/release/*.aab 2>/dev/null | head -n 1)
+          AAB_FILE=$(find android-template/app/build -type f -name "*.aab" | grep -i release | head -n 1)
           if [ -n "$AAB_FILE" ] && [ -f "$AAB_FILE" ]; then
             if [ -n "$R2_KEY" ] && [ "$R2_KEY" != "null" ]; then
               R2_KEY_FILE="apps/$PKG_NAME/build/aab/${APP_SAFE_NAME}-release-${BUILD_ID}.aab"
