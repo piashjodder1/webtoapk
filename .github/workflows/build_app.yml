@@ -251,7 +251,8 @@ jobs:
           if [ "$BUILD_TYPE" = "apk" ] || [ "$BUILD_TYPE" = "both" ]; then
             APK_DIR="android-template/app/build/outputs/apk/release"
             APP_NAME=$(jq -r '.app_name' build_config.json)
-            APP_SAFE_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
+            APP_SAFE_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')
+            if [ -z "$APP_SAFE_NAME" ]; then APP_SAFE_NAME="app"; fi
           if [ -f "$APK_DIR/app-release.apk" ]; then
             mv "$APK_DIR/app-release.apk" "$APK_DIR/${APP_SAFE_NAME}-release.apk"
             echo "APK renamed to ${APP_SAFE_NAME}-release.apk"
@@ -275,7 +276,8 @@ jobs:
           if [ "$BUILD_TYPE" = "aab" ] || [ "$BUILD_TYPE" = "both" ]; then
             AAB_DIR="android-template/app/build/outputs/bundle/release"
             APP_NAME=$(jq -r '.app_name' build_config.json)
-            APP_SAFE_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
+            APP_SAFE_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')
+            if [ -z "$APP_SAFE_NAME" ]; then APP_SAFE_NAME="app"; fi
           if [ -f "$AAB_DIR/app-release.aab" ]; then
             mv "$AAB_DIR/app-release.aab" "$AAB_DIR/${APP_SAFE_NAME}-release.aab"
               echo "AAB renamed to ${APP_SAFE_NAME}-release.aab"
@@ -314,14 +316,15 @@ jobs:
           PKG_NAME=$(jq -r '.package_name' build_config.json)
           BUILD_ID=$(jq -r '.build_id' build_config.json)
           APP_NAME=$(jq -r '.app_name' build_config.json)
-          APP_SAFE_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')
+          APP_SAFE_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')
+          if [ -z "$APP_SAFE_NAME" ]; then APP_SAFE_NAME="app"; fi
           R2_BUCKET=$(jq -r '.r2_bucket' build_config.json)
           R2_ENDPOINT=$(jq -r '.r2_endpoint' build_config.json)
           R2_PUBLIC_URL=$(jq -r '.r2_public_url' build_config.json)
 
           # ── APK ──────────────────────────────────────────────────────────
-          APK_FILE="android-template/app/build/outputs/apk/release/${APP_SAFE_NAME}-release.apk"
-          if [ -f "$APK_FILE" ]; then
+          APK_FILE=$(ls android-template/app/build/outputs/apk/release/*.apk 2>/dev/null | head -n 1)
+          if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
             if [ -n "$R2_KEY" ] && [ "$R2_KEY" != "null" ]; then
               R2_KEY_FILE="apps/$PKG_NAME/build/apk/${APP_SAFE_NAME}-release-${BUILD_ID}.apk"
               if aws s3 cp "$APK_FILE" "s3://$R2_BUCKET/$R2_KEY_FILE" \
@@ -343,8 +346,8 @@ jobs:
           fi
 
           # ── AAB ──────────────────────────────────────────────────────────
-          AAB_FILE="android-template/app/build/outputs/bundle/release/${APP_SAFE_NAME}-release.aab"
-          if [ -f "$AAB_FILE" ]; then
+          AAB_FILE=$(ls android-template/app/build/outputs/bundle/release/*.aab 2>/dev/null | head -n 1)
+          if [ -n "$AAB_FILE" ] && [ -f "$AAB_FILE" ]; then
             if [ -n "$R2_KEY" ] && [ "$R2_KEY" != "null" ]; then
               R2_KEY_FILE="apps/$PKG_NAME/build/aab/${APP_SAFE_NAME}-release-${BUILD_ID}.aab"
               if aws s3 cp "$AAB_FILE" "s3://$R2_BUCKET/$R2_KEY_FILE" \
