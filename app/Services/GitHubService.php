@@ -92,7 +92,7 @@ class GitHubService
 
             'key_alias' => $app->keystore_data['key_alias'] ?? 'upload',
             'keystore_password' => $app->keystore_data['keystore_password'] ?? 'secret',
-            'key_password' => $app->keystore_data['key_password'] ?? 'secret',
+            'key_password' => $app->keystore_data['key_password'] ?? ($app->keystore_data['keystore_password'] ?? 'secret'),
             'base64_keystore' => $app->keystore_data['base64_keystore'] ?? '',
         ];
 
